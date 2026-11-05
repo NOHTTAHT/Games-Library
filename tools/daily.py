@@ -112,13 +112,16 @@ retry_before = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
 cat = supa.list_docs("catalog")
 games = supa.list_docs("games"); info = supa.list_docs("gameinfo")
 have_cover = {app_norm(x["t"]) for d in cat.values() for x in d.get("items", []) if x.get("c")}
-LIMIT = 900; done = 0; found = 0
+# COVERS=all (the "Run workflow" option) looks up every missing cover, stopping in time to save; otherwise 900 a day
+ALL = os.environ.get("COVERS") == "all"
+LIMIT = 10**9 if ALL else 900; STOP_AT = time.time() + 140 * 60; done = 0; found = 0
+def full(): return done >= LIMIT or time.time() > STOP_AT
 # a) the owner's games first
 info_patch = {}
 for gid, g in games.items():
     t = g.get("title") or ""; k = info_key(t)
     if not t or g.get("coverId") or (info.get(k) or {}).get("coverId") or app_norm(t) in have_cover: continue
-    if tried.get("g:" + k, "") > retry_before or done >= LIMIT: continue
+    if tried.get("g:" + k, "") > retry_before or full(): continue
     c = find_cover(t); done += 1
     if c is None: continue
     tried["g:" + k] = TODAY
@@ -130,7 +133,7 @@ cat_patch = {}
 for doc_id in sorted(cat, key=lambda k: re.sub(r"\D", "", k)[:4], reverse=True):
     items = cat[doc_id].get("items", []); ch = False
     for x in items:
-        if done >= LIMIT: break
+        if full(): break
         if x.get("c") or not x.get("t"): continue
         k = "c:" + app_norm(x["t"]) + "|" + x["p"][0]
         if tried.get(k, "") > retry_before: continue
