@@ -18,6 +18,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Install packages
+        run: pip install beautifulsoup4
       - name: Update calendar, covers and Top 10
         env:
           SUPABASE_URL: https://hkjgrhlleqkzstvtfgst.supabase.co

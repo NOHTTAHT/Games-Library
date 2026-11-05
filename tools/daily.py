@@ -27,6 +27,8 @@ wiki_ok = "ALL_OK" in run(f"{HERE}/fetch.py", f"{W}/html").stdout
 new_docs, deletes = {}, set()
 if wiki_ok:
     r = run(f"{HERE}/build.py", f"{W}/html", f"{W}/existing", out)
+    wiki_ok = r.returncode == 0 and os.path.exists(f"{out}/plan.json")
+if wiki_ok:
     plan = json.load(open(f"{out}/plan.json"))
     for k in plan["set"]:
         new_docs[k] = json.load(open(f"{out}/{k}.json"))
@@ -37,7 +39,7 @@ else:
     for k, v in existing.items():
         if not k.startswith("igdb-"):
             json.dump(v, open(f"{out}/{k}.json", "w"), ensure_ascii=False)
-    report.append("Wikipedia: fetch failed, kept existing lists")
+    report.append("Wikipedia: failed, kept existing lists")
 
 r = run(f"{HERE}/igdb_catalog.py", out, igd, f"{W}/existing")
 if "IGDB_FAILED" in r.stdout or r.returncode:
