@@ -44,8 +44,13 @@ def get_doc(coll, id):
 def set_docs(coll, docs):
     """docs: {id: data}. Upserts in small batches."""
     items = [{"coll": coll, "id": k, "data": v, "updated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())} for k, v in docs.items()]
-    for i in range(0, len(items), 20):
-        _req("POST", URL + "?on_conflict=coll,id", items[i:i + 20], {"Prefer": "resolution=merge-duplicates,return=minimal"})
+    chunk, size = [], 0
+    for it in items + [None]:
+        n = len(json.dumps(it, ensure_ascii=False)) if it else 0
+        if chunk and (it is None or size + n > 800000 or len(chunk) >= 50):
+            _req("POST", URL + "?on_conflict=coll,id", chunk, {"Prefer": "resolution=merge-duplicates,return=minimal"})
+            chunk, size = [], 0
+        if it: chunk.append(it); size += n
 
 def delete_doc(coll, id):
     q = urllib.parse.urlencode({"coll": "eq." + coll, "id": "eq." + id})

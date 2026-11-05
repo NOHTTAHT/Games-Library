@@ -110,7 +110,7 @@ retry_before = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
 cat = supa.list_docs("catalog")
 games = supa.list_docs("games"); info = supa.list_docs("gameinfo")
 have_cover = {app_norm(x["t"]) for d in cat.values() for x in d.get("items", []) if x.get("c")}
-LIMIT = 350; done = 0; found = 0
+LIMIT = 900; done = 0; found = 0
 # a) the owner's games first
 info_patch = {}
 for gid, g in games.items():

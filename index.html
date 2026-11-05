@@ -1933,7 +1933,13 @@ async function doImport(){
   const btn=document.querySelector('[data-act="doImport"]'); if(btn){ btn.disabled=true; btn.textContent="กำลังนำเข้า…"; }
   if(ip.full){
     if(S.mode!=="cloud"){ toast("เข้าสู่ระบบก่อนนำเข้า"); return; }
-    const j=ip.full, rows=[];
+    const j=JSON.parse(JSON.stringify(ip.full)), rows=[];
+    // Single cover files stayed in the old app; drop those links so the daily update refills them from IGDB
+    const one=c=>/^[0-9a-f]{32}$/.test(String(c||""));
+    const fix=o=>{ if(o&&one(o.coverId)) delete o.coverId; };
+    (j.games||[]).forEach(fix); (j.rentals||[]).forEach(fix); Object.values(j.gameinfo||{}).forEach(fix);
+    Object.values(j.catalog||{}).forEach(d=>(d&&d.items||[]).forEach(x=>{ if(x&&one(x.c)) delete x.c; }));
+    ((j.meta&&j.meta.releases&&j.meta.releases.items)||[]).forEach(x=>{ if(x&&one(x.c)) delete x.c; });
     const list=(coll,arr)=>(arr||[]).forEach(x=>{ if(x&&x.id){ const {id,...data}=x; rows.push({coll,id,data}); } });
     const map=(coll,obj)=>Object.entries(obj||{}).forEach(([id,data])=>{ if(data) rows.push({coll,id,data}); });
     list("games",j.games); list("rentals",j.rentals); list("subs",j.subs); map("gameinfo",j.gameinfo); map("catalog",j.catalog);

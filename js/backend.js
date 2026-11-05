@@ -68,12 +68,19 @@
     doc(path){ const i=path.indexOf("/"); return docRef(path.slice(0,i), path.slice(i+1)); },
     /* Many writes at once (used by the import) */
     async bulkSet(rows, onProgress){
-      for(let i=0;i<rows.length;i+=100){
-        const chunk = rows.slice(i,i+100).map(r=>({ coll:r.coll, id:r.id, data:clone(r.data), updated_at:new Date().toISOString() }));
+      // send in chunks of at most ~800 KB / 100 rows
+      let i=0;
+      while(i<rows.length){
+        const chunk=[]; let size=0;
+        while(i<rows.length && chunk.length<100){
+          const r={ coll:rows[i].coll, id:rows[i].id, data:clone(rows[i].data), updated_at:new Date().toISOString() };
+          const n=JSON.stringify(r.data).length; if(chunk.length && size+n>800000) break;
+          chunk.push(r); size+=n; i++;
+        }
         const { error } = await sb.from("docs").upsert(chunk);
         if(error) throw new Error(error.message);
         chunk.forEach(r=>{ (cache[r.coll] = cache[r.coll] || new Map()).set(r.id, r.data); });
-        onProgress && onProgress(Math.min(rows.length, i+100), rows.length);
+        onProgress && onProgress(i, rows.length);
       }
       [...new Set(rows.map(r=>r.coll))].forEach(emit);
     }
