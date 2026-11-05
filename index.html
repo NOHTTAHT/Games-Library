@@ -1,0 +1,2055 @@
+<!doctype html>
+<html lang="th"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Games Library</title>
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Games Library">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+/* Layout: sticky header, one scrolling column of views, fixed bottom tab bar; game cards wear a case-style platform band on top */
+:root{
+  --bg:#EDEFF3; --surface:#FFFFFF; --surface-2:#F5F6F9; --ink:#13151B; --muted:#5D6371; --line:#D8DBE2;
+  --accent:#F25418; --accent-ink:#FFFFFF;
+  --ps:#1F5FE0; --ns1:#E3000F; --ns2:#E3000F;
+  --ok:#1C8C4E; --ok-bg:#E3F4EA; --warn:#B45309; --warn-bg:#FDF0DC; --danger:#C62828;
+  --shadow:0 1px 2px rgba(19,21,27,.06),0 4px 14px rgba(19,21,27,.05);
+  --f-display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Thai",system-ui,-apple-system,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --tabbar-h:64px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0D0F14; --surface:#171A21; --surface-2:#1E222A; --ink:#ECEEF3; --muted:#9BA2B1; --line:#2B303B;
+  --accent:#FF7440; --accent-ink:#1A0A03;
+  --ps:#5A8BFF; --ns1:#FF4A55; --ns2:#FF4A55;
+  --ok:#46CC84; --ok-bg:#15301F; --warn:#F2A33A; --warn-bg:#33240E; --danger:#FF6B6B;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0D0F14; --surface:#171A21; --surface-2:#1E222A; --ink:#ECEEF3; --muted:#9BA2B1; --line:#2B303B;
+  --accent:#FF7440; --accent-ink:#1A0A03;
+  --ps:#5A8BFF; --ns1:#FF4A55; --ns2:#FF4A55;
+  --ok:#46CC84; --ok-bg:#15301F; --warn:#F2A33A; --warn-bg:#33240E; --danger:#FF6B6B;
+  --shadow:0 1px 2px rgba(0,0,0,.4); color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--bg)}
+body{color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+input,select,textarea{font-size:16px}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+header.top{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--vt-offset,0px));z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:12px;padding-block:10px}
+.brand{font-family:var(--f-display);font-weight:700;font-size:21px;letter-spacing:-.01em;line-height:1.1}
+.brand small{display:block;font-family:var(--f-body);font-weight:400;font-size:12px;color:var(--muted);letter-spacing:0}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-left:auto}
+.sync i{width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.sync.on i{background:var(--ok)} .sync.local i{background:var(--warn)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:9px 14px;font-weight:500;cursor:pointer;min-height:40px;white-space:nowrap}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.ghost{background:transparent}
+.btn.small{min-height:32px;padding:5px 10px;font-size:13px;border-radius:8px}
+.btn.danger{color:var(--danger);border-color:color-mix(in srgb,var(--danger) 40%,var(--line))}
+.btn[disabled]{opacity:.5;pointer-events:none}
+
+main{padding-bottom:calc(var(--tabbar-h) + var(--vb-offset,0px) + env(safe-area-inset-bottom,0px) + 24px)}
+section.view{padding-block:16px;display:flex;flex-direction:column;gap:14px}
+h2.vt{font-family:var(--f-display);font-weight:700;font-size:26px;margin:4px 0 0;text-wrap:balance;letter-spacing:-.01em}
+h3.st{font-family:var(--f-display);font-weight:600;font-size:17px;margin:8px 0 0}
+.sub{color:var(--muted);font-size:13px}
+.eyebrow{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.search{flex:1 1 220px;min-width:0;display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:0 12px;min-height:42px}
+.search input{border:0;background:transparent;outline:0;width:100%;min-width:0;padding:8px 0}
+.chips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;max-width:100%}
+.chips::-webkit-scrollbar{display:none}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;white-space:nowrap;min-height:34px}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+select.sel{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 10px;min-height:42px;font-size:14px}
+
+.statline{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.statline b{color:var(--ink);font-weight:600}
+
+/* Game cards: case-style top band in the platform colour */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;box-shadow:var(--shadow);text-align:left;padding:0;width:100%}
+.band{display:flex;align-items:center;justify-content:space-between;padding:4px 12px;font-family:var(--f-display);font-weight:700;font-size:12px;letter-spacing:.06em;color:#fff}
+.band.PS5{background:var(--ps)} .band.NS1{background:#fff;color:var(--ns1);box-shadow:inset 0 -2px 0 var(--ns1)} .band.NS2{background:var(--ns2)}
+.band span:last-child{font-family:var(--f-body);font-weight:500;letter-spacing:0;opacity:.95}
+.card .body{padding:10px 12px 12px;display:grid;grid-template-columns:1fr auto;gap:2px 12px;min-width:0}
+.card .title{font-weight:600;font-size:16px;line-height:1.35;min-width:0;overflow-wrap:anywhere}
+.card .price{font-family:var(--f-mono);font-weight:600;font-size:15px;text-align:right}
+.card .body.hc{grid-template-columns:52px 1fr auto}
+.thumb{grid-row:1/span 3;width:52px;aspect-ratio:3/4.2;object-fit:cover;border-radius:4px;border:1px solid var(--line);background:var(--surface-2)}
+.card .body.hc .who,.card .body.hc .meta{grid-column:2/-1}
+.card .who{grid-column:1/-1;color:var(--muted);font-size:13px;min-width:0;overflow-wrap:anywhere}
+.card .meta{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:6px;font-size:12.5px;color:var(--muted)}
+@media (max-width:600px){
+  .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .band{padding:2px 6px;font-size:10px;letter-spacing:.02em}
+  .band span:last-child{font-size:10px}
+  .card{border-radius:10px}
+  .card .body.hc{grid-template-columns:minmax(0,1fr) auto;padding:0 0 10px;gap:4px 6px;align-content:start}
+  .card .body.hc>.thumb,.card .body.hc>.rthumb{grid-row:auto;grid-column:1/-1;width:100%;flex:none;aspect-ratio:3/4;border-radius:0;border:0;border-bottom:1px solid var(--line)}
+  .card .body.hc>.rthumb span{font-size:34px}
+  .card .title{grid-column:1/-1;padding:4px 6px 0;font-size:12.5px;line-height:1.3;min-height:calc(2.6em + 4px);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .card .price{grid-column:1/-1;text-align:left;padding:0 6px;font-size:12px}
+  .card .body.hc .who{display:none}
+  .card .body.hc .meta{grid-column:1/-1;padding:0 6px;margin-top:2px;gap:3px;align-self:end}
+  .card .body.hc{flex:1;grid-template-rows:auto auto auto 1fr}
+  .card .body.hc .meta .pill.soft{display:none}
+  .card .body.hc .meta>span:last-child{display:none}
+  .card .meta .pill{font-size:10.5px;padding:1px 6px}
+  .card .body.hc{padding-bottom:8px}
+}
+.linkbtn{background:none;border:0;padding:0 2px;color:var(--accent,#E8590C);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
+.spr{display:block;width:100%;height:100%;background-repeat:no-repeat;background-color:var(--surface-2)}
+.thumb.spr{height:auto}
+.cover .spr{flex:1;height:auto}
+.pill.fmt{background:var(--surface-2);color:var(--ink);border:1px solid var(--line)} .pill.fmt.dl{border-style:dashed}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.soft{background:var(--surface-2);color:var(--muted);font-weight:500;border:1px solid var(--line)}
+.ptag{display:inline-block;border-radius:5px;padding:1px 6px;font-size:11px;font-weight:700;font-family:var(--f-display);letter-spacing:.04em;color:#fff}
+.ptag.PS5{background:var(--ps)} .ptag.NS1{background:#fff;color:var(--ns1);box-shadow:inset 0 0 0 1.5px var(--ns1)} .ptag.NS2{background:var(--ns2)}
+.n2{margin-left:.2em;font-weight:800;color:inherit}
+.detail-top{display:grid;grid-template-columns:132px 1fr;gap:14px;align-items:start}
+@media (min-width:520px){.detail-top{grid-template-columns:170px 1fr}}
+.cover{aspect-ratio:3/4.2;max-width:100%;border-radius:8px;overflow:hidden;background:var(--surface-2);border:1px solid var(--line);display:flex;flex-direction:column}
+.cover img{width:100%;height:100%;object-fit:cover;display:block}
+.cover .ph{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;font-family:var(--f-display);font-weight:600;font-size:14px;line-height:1.25;color:var(--muted);overflow-wrap:anywhere}
+.cover .cb{padding:3px 8px;font-family:var(--f-display);font-weight:700;font-size:11px;color:#fff;letter-spacing:.05em}
+.cover .cb.PS5{background:var(--ps)} .cover .cb.NS2{background:var(--ns1)} .cover .cb.NS1{background:#fff;color:var(--ns1);box-shadow:inset 0 -2px 0 var(--ns1)}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px;margin:0}
+.facts dt{color:var(--muted)} .facts dd{margin:0;min-width:0;overflow-wrap:anywhere;font-weight:500}
+.dtitle{font-family:var(--f-display);font-weight:700;font-size:21px;line-height:1.25;margin:0 0 6px;text-wrap:balance;overflow-wrap:anywhere}
+.vids{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.vid{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:12px;text-decoration:none;color:var(--ink);background:var(--surface-2)}
+.vid .play{width:34px;height:34px;flex:0 0 34px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.vid b{display:block;font-size:14px} .vid span{font-size:12px;color:var(--muted)}
+.rthumb{width:46px;flex:0 0 46px;aspect-ratio:3/4.2;border-radius:5px;overflow:hidden;border:1px solid var(--line);background:var(--surface-2);display:flex;flex-direction:column}
+.rthumb img{width:100%;height:100%;object-fit:cover;display:block}
+.rthumb i{height:5px;flex:0 0 5px} .rthumb i.PS5{background:var(--ps)} .rthumb i.NS1,.rthumb i.NS2{background:var(--ns1)}
+.rthumb span{flex:1;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:15px;color:var(--muted)}
+.thumb.ph{display:flex;flex-direction:column;overflow:hidden}
+.row.click{cursor:pointer}
+.row.click:hover{background:var(--surface-2)}
+.lightbox{position:fixed;inset:0;z-index:70;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;padding:max(16px,env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+.lightbox img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px}
+.lightbox .lbx{position:absolute;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:20px;padding:8px 14px;font-weight:600}
+.lightbox .nav{position:absolute;top:50%;transform:translateY(-50%);background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:50%;width:44px;height:44px;font-size:20px}
+.rt{cursor:pointer;text-align:left;background:none;border:0;padding:0;font:inherit;color:inherit}
+
+.empty{background:var(--surface);border:1px dashed var(--line);border-radius:12px;padding:28px 18px;text-align:center;color:var(--muted);display:flex;flex-direction:column;gap:10px;align-items:center}
+.empty b{color:var(--ink);font-family:var(--f-display);font-size:18px}
+.banner{background:var(--warn-bg);color:var(--warn);border-radius:10px;padding:10px 12px;font-size:13px}
+
+/* Lists */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:flex;gap:12px;align-items:center;padding:11px 12px;border-top:1px solid var(--line);min-width:0}
+.row:first-child{border-top:0}
+.row .grow{flex:1;min-width:0}
+.row .t{font-weight:600;overflow-wrap:anywhere}
+.row .s{color:var(--muted);font-size:13px}
+.day{width:44px;flex:0 0 44px;text-align:center;font-family:var(--f-mono);font-weight:600;font-size:20px;line-height:1}
+.day small{display:block;font-family:var(--f-body);font-size:11px;font-weight:500;color:var(--muted);margin-top:3px}
+.month-h{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--vt-offset,0px) + var(--head-h,115px));z-index:5;background:var(--bg);padding:8px 0 6px;font-family:var(--f-display);font-weight:600;font-size:15px;display:flex;justify-content:space-between;align-items:baseline}
+.month-h span{font-family:var(--f-body);font-weight:400;font-size:12px;color:var(--muted)}
+.rowbtns{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.heart[aria-pressed="true"]{color:var(--accent);border-color:var(--accent)}
+
+.person{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.person > header{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface-2);border-bottom:1px solid var(--line)}
+.avatar{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--ink);color:var(--bg);font-weight:600;font-size:14px;flex:0 0 32px}
+
+/* Summary */
+.kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.kpi .v{font-family:var(--f-mono);font-weight:600;font-size:clamp(17px,4.6vw,24px);line-height:1.2;margin-top:2px;overflow-wrap:anywhere}
+.kpi.hero{grid-column:1/-1;background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.kpi.hero .eyebrow{color:color-mix(in srgb,var(--bg) 70%,transparent)}
+.kpi.hero .v{font-size:36px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.panels{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.bar{display:grid;grid-template-columns:minmax(70px,30%) 1fr auto;gap:10px;align-items:center;font-size:13px}
+.bar .lbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar .track{height:10px;border-radius:5px;background:var(--surface-2);overflow:hidden;border:1px solid var(--line)}
+.bar .fill{height:100%;border-radius:5px;background:var(--ink)}
+.bar .fill.PS5{background:var(--ps)} .bar .fill.NS1{background:var(--ns1)} .bar .fill.NS2{background:repeating-linear-gradient(135deg,var(--ns2) 0 6px,color-mix(in srgb,var(--ns2) 70%,var(--surface)) 6px 9px)}
+.bar .val{font-family:var(--f-mono);font-size:12.5px;text-align:right}
+
+/* Tab bar */
+nav.tabs{position:fixed;left:0;right:0;bottom:var(--vb-offset,0px);z-index:25;background:color-mix(in srgb,var(--surface) 94%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);transition:bottom .12s ease-out}
+nav.tabs .in{max-width:640px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr);height:var(--tabbar-h)}
+nav.tabs a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;text-decoration:none;color:var(--muted);font-size:11px;font-weight:500;position:relative}
+nav.tabs a svg{width:23px;height:23px}
+nav.tabs a[aria-current="page"]{color:var(--accent)}
+nav.tabs a .badge{position:absolute;top:8px;left:calc(50% + 6px);background:var(--accent);color:var(--accent-ink);font-size:10px;font-weight:700;border-radius:9px;padding:0 5px;min-width:16px;text-align:center;line-height:16px}
+
+/* Sheet */
+.scrim{position:fixed;inset:0;z-index:40;background:rgba(8,10,14,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;max-width:640px;max-height:calc(100% - env(safe-area-inset-top,0px) - 24px);border-radius:16px 16px 0 0;display:flex;flex-direction:column;box-shadow:0 -8px 30px rgba(0,0,0,.2)}
+@media (min-width:700px){.scrim{align-items:center}.sheet{border-radius:16px;max-height:90%}}
+.sheet.tall{height:calc(100% - env(safe-area-inset-top,0px) - 24px)}.sheet.tall .content{flex:1 1 auto}
+@media (min-width:700px){.sheet.tall{height:90%}}
+.sheet > header{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.sheet > header h3{margin:0;font-family:var(--f-display);font-size:19px;flex:1;min-width:0}
+.sheet .content{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px 16px;display:flex;flex-direction:column;gap:14px}
+.sheet > footer{display:flex;gap:8px;padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);flex-wrap:wrap}
+.sheet > footer .sp{flex:1}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field > label,.field > .lab{font-size:13px;font-weight:500;color:var(--muted)}
+.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:10px 12px;min-height:44px;width:100%;min-width:0}
+.field textarea{min-height:70px;resize:vertical}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.two > *{min-width:0}
+.field input[type="date"]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;min-width:0;text-align:left;line-height:1.3}
+.field input[type="date"]::-webkit-date-and-time-value{text-align:left;margin:0}
+.field input[type="date"]::-webkit-calendar-picker-indicator{margin-left:auto}
+@media (max-width:480px){.two.stack{grid-template-columns:minmax(0,1fr)}}
+.seg{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:8px 6px;font-weight:500;cursor:pointer;min-height:38px;font-size:14px}
+.seg button[aria-pressed="true"]{background:var(--surface);box-shadow:var(--shadow);font-weight:600}
+.seg button[aria-pressed="true"][data-v="PS5"]{background:var(--ps);color:#fff}
+.seg button[aria-pressed="true"][data-v="NS1"]{background:#fff;color:var(--ns1);box-shadow:inset 0 0 0 2px var(--ns1)}
+.seg button[aria-pressed="true"][data-v="NS2"]{background:var(--ns2);color:#fff}
+.box{border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--surface)}
+.box h4{margin:0;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px}
+.hint{font-size:12.5px;color:var(--muted)}
+.inline-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+.inline-row .field{flex:1 1 140px}
+.titlewrap{display:flex;gap:8px;align-items:stretch}
+.titlewrap input{flex:1}
+.confirm-q{font-weight:600;color:var(--danger,#c0392b);font-size:14px}
+.btn.danger.solid{background:var(--danger,#c0392b);color:#fff;border-color:transparent}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;background:var(--surface-2);border-radius:10px;padding:8px 10px;font-size:13px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabbar-h) + var(--vb-offset,0px) + env(safe-area-inset-bottom,0px) + 14px);z-index:60;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.25);max-width:calc(100% - 32px)}
+.src{font-size:12px;color:var(--muted)}
+.src a{color:inherit}
+table.map{border-collapse:collapse;font-size:13px;width:100%}
+table.map td{border-top:1px solid var(--line);padding:6px 4px;vertical-align:top}
+.tblwrap{overflow-x:auto}
+/* App shell: the page itself never scrolls; only the content area does, so the header and bottom menu stay on screen */
+html{box-sizing:border-box;height:100%;overflow:hidden}
+body{margin:0;height:100%;overflow:hidden;display:flex;flex-direction:column}
+header.top{position:relative;top:auto;flex:none}
+main#scroller{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;padding-bottom:24px}
+nav.tabs{position:relative;bottom:auto;flex:none}
+.month-h{top:0}
+/* Subscriptions */
+nav.tabs .in{grid-template-columns:repeat(6,1fr)}
+nav.tabs a{font-size:10.5px}
+.subcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.subcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.subcard .band.psn{background:var(--ps)} .subcard .band.nso{background:var(--ns1)}
+.subcard .in{padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.subcard .plan{font-family:var(--f-display);font-weight:700;font-size:19px;line-height:1.25}
+.left{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.left .n{font-family:var(--f-mono);font-weight:600;font-size:34px;line-height:1}
+.left.ok .n{color:var(--ok)} .left.warn .n{color:var(--warn)} .left.bad .n{color:var(--danger)}
+.meter{height:8px;border-radius:4px;background:var(--surface-2);border:1px solid var(--line);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--ok)}
+.meter.warn i{background:var(--warn)} .meter.bad i{background:var(--danger)}
+.pill.bad{background:color-mix(in srgb,var(--danger) 14%,var(--surface));color:var(--danger)}
+.ptag.psn{background:var(--ps)} .ptag.nso{background:var(--ns1)}
+.prices{width:100%;border-collapse:collapse;font-size:13.5px}
+.prices th,.prices td{padding:7px 6px;border-top:1px solid var(--line);text-align:right;white-space:nowrap}
+.prices th:first-child,.prices td:first-child{text-align:left;white-space:normal}
+.prices thead th{border-top:0;color:var(--muted);font-weight:500;font-size:12px}
+.prices td .pb{border:1px solid var(--line);background:var(--surface-2);border-radius:8px;padding:4px 8px;font-family:var(--f-mono);font-size:13px;cursor:pointer;min-height:32px}
+.prices td .pb:hover{border-color:var(--accent)}
+.prices .per{display:block;font-size:11px;color:var(--muted);font-family:var(--f-body)}
+.seg button[disabled]{opacity:.35;cursor:default}
+.seg.segwrap{flex-wrap:wrap} .seg.segwrap button{flex:1 1 auto}
+.seg button[aria-pressed="true"][data-v="psn"]{background:var(--ps);color:#fff}
+.seg button[aria-pressed="true"][data-v="nso"]{background:var(--ns1);color:#fff}
+.share{border-top:1px dashed var(--line);padding-top:8px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.share .who{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.share .who span:first-child{min-width:0;overflow-wrap:anywhere}
+.mrow{display:grid;grid-template-columns:minmax(0,1fr) 96px auto auto;gap:6px;align-items:center}
+.mrow input{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:8px 10px;min-height:42px;width:100%;min-width:0}
+.calc{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:14px}
+.calc b{font-family:var(--f-display);font-weight:600}
+
+/* ===== Red theme: soft off-white canvas, dark hero card, round icon actions, white rounded cards, dark pill tab bar ===== */
+:root{
+  --bg:#EEEEEA; --surface:#FFFFFF; --surface-2:#F3F3EF; --ink:#141518; --muted:#6E7076; --line:#E6E6E1;
+  --accent:#E5322D; --accent-ink:#FFFFFF; --accent-soft:#FDE2E0; --accent-soft-ink:#B3201B;
+  --hero:#161719; --hero-ink:#FFFFFF; --hero-muted:#9A9CA2; --navbg:#161719;
+  --shadow:0 1px 2px rgba(20,21,24,.04),0 6px 20px rgba(20,21,24,.05);
+  --f-display:"Inter","IBM Plex Sans Thai",system-ui,sans-serif;
+  --f-body:"Inter","IBM Plex Sans Thai",system-ui,-apple-system,sans-serif;
+  --r-lg:22px; --r-md:16px; --tabbar-h:64px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E0F11; --surface:#1A1B1E; --surface-2:#232428; --ink:#F2F2EF; --muted:#9B9DA3; --line:#2A2B2F;
+  --accent:#FF4B45; --accent-ink:#FFFFFF; --accent-soft:#3A1715; --accent-soft-ink:#FF8C87;
+  --hero:#000000; --hero-ink:#FFFFFF; --hero-muted:#8C8E94; --navbg:#000000;
+  --shadow:0 1px 2px rgba(0,0,0,.4)}}
+:root[data-theme="dark"]{
+  --bg:#0E0F11; --surface:#1A1B1E; --surface-2:#232428; --ink:#F2F2EF; --muted:#9B9DA3; --line:#2A2B2F;
+  --accent:#FF4B45; --accent-ink:#FFFFFF; --accent-soft:#3A1715; --accent-soft-ink:#FF8C87;
+  --hero:#000000; --hero-ink:#FFFFFF; --hero-muted:#8C8E94; --navbg:#000000;
+  --shadow:0 1px 2px rgba(0,0,0,.4)}
+
+/* Header: round logo + greeting-style title + round add button */
+header.top{background:var(--bg);border-bottom:0}
+header.top .wrap{padding-block:14px 8px}
+.logo{width:46px;height:46px;flex:0 0 46px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.logo svg{width:24px;height:24px}
+.brand{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.brand small{font-size:12.5px;margin-bottom:2px}
+.brand,.brand small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.sync{white-space:nowrap;flex:none}
+@media (max-width:520px){.sync{padding:0;width:30px;height:30px;justify-content:center}.sync span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}}
+.sync{background:var(--surface);border-radius:999px;padding:5px 10px;box-shadow:var(--shadow)}
+.iconbtn{width:46px;height:46px;flex:0 0 46px;border-radius:50%;border:0;background:var(--surface);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:var(--shadow);position:relative}
+.iconbtn svg{width:22px;height:22px}
+.iconbtn:active{transform:scale(.96)}
+
+/* Buttons, inputs, chips */
+.btn{border-radius:999px;border-color:var(--line);font-weight:600}
+.btn.small{border-radius:999px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.search,select.sel{border:0;border-radius:999px;box-shadow:var(--shadow);background:var(--surface)}
+.search{padding:0 16px;min-height:46px}
+select.sel{padding:8px 14px;min-height:46px}
+.chip{border:0;background:var(--surface);box-shadow:var(--shadow);font-weight:500;padding:7px 14px}
+.chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.seg{background:var(--surface);border:0;border-radius:999px;box-shadow:var(--shadow);padding:4px}
+.seg button{border-radius:999px}
+.sheet .seg{background:var(--surface-2);box-shadow:none}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);box-shadow:none}
+
+/* Headings */
+h2.vt{font-size:22px;font-weight:700;letter-spacing:-.02em}
+h3.st{font-size:17px;font-weight:700;letter-spacing:-.01em}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;margin-top:4px}
+.sechead h3{margin:0;font-family:var(--f-display);font-size:17px;font-weight:700;letter-spacing:-.01em}
+.sechead span{font-size:13px;color:var(--muted);font-weight:600}
+
+/* Hero card */
+.hero{position:relative;overflow:hidden;background:var(--hero);color:var(--hero-ink);border-radius:var(--r-lg);padding:20px 20px 18px;display:flex;flex-direction:column;gap:6px;isolation:isolate}
+.hero::after{content:"";position:absolute;right:-46px;bottom:-62px;width:170px;height:170px;border-radius:50%;border:22px solid color-mix(in srgb,var(--accent) 26%,transparent);z-index:-1}
+.hero .hl{font-size:13.5px;color:var(--hero-muted)}
+.hero .hv{font-family:var(--f-display);font-weight:700;font-size:clamp(32px,9vw,42px);line-height:1.1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.hero .hv small{font-size:.8em;color:var(--hero-muted);font-weight:600;letter-spacing:-.02em}
+.hero .hs{font-size:13px;color:var(--hero-muted);display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.hero .hs b{color:var(--accent);font-weight:700}
+.hero .htop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.hero .hpill{background:color-mix(in srgb,var(--hero-ink) 10%,transparent);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;color:var(--hero-ink)}
+
+/* Round quick actions */
+.qa{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.qa a,.qa button{display:flex;flex-direction:column;align-items:center;gap:7px;text-decoration:none;color:var(--ink);font-size:13px;font-weight:600;background:none;border:0;padding:0;cursor:pointer;text-align:center;line-height:1.2}
+.qa i{width:56px;height:56px;border-radius:50%;background:var(--surface);display:grid;place-items:center;box-shadow:var(--shadow);font-style:normal}
+.qa i svg{width:22px;height:22px}
+.qa .on i{background:var(--accent);color:var(--accent-ink)}
+
+/* Progress card */
+.goal{background:var(--surface);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--shadow)}
+.goal .gt{display:flex;align-items:center;gap:12px}
+.goal .gi{width:44px;height:44px;flex:0 0 44px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.goal .gi svg{width:22px;height:22px}
+.goal b{display:block;font-size:16px}
+.goal .gs{font-size:13px;color:var(--muted)}
+.goal .gp{margin-left:auto;font-family:var(--f-display);font-weight:700;font-size:20px;letter-spacing:-.02em}
+.goal .gb{height:8px;border-radius:999px;background:var(--surface-2);overflow:hidden}
+.goal .gb i{display:block;height:100%;background:var(--ink);border-radius:999px}
+
+/* Cards and lists: white, rounded, borderless */
+.card,.list,.person,.panel,.kpi,.subcard,.box,.empty{border-color:transparent;border-radius:var(--r-md);box-shadow:var(--shadow)}
+.list,.person,.panel{border-radius:var(--r-lg)}
+.empty{border:1px dashed var(--line)}
+.card{border:0}
+.row{border-top-color:var(--line);padding:12px 14px}
+.person > header{background:var(--surface);border-bottom-color:var(--line)}
+.avatar{width:40px;height:40px;flex:0 0 40px;background:var(--accent-soft);color:var(--accent-soft-ink);font-weight:700}
+.rthumb,.thumb{border-radius:8px}
+.cover{border-radius:14px;border:0}
+.sheet{border-radius:24px 24px 0 0}
+@media (min-width:700px){.sheet{border-radius:24px}}
+.field input,.field select,.field textarea{border-radius:12px}
+.kpi.hero{background:var(--hero);color:var(--hero-ink);border-color:var(--hero);position:relative;overflow:hidden;isolation:isolate;border-radius:var(--r-lg);padding:18px 20px}
+.kpi.hero::after{content:"";position:absolute;right:-46px;bottom:-62px;width:170px;height:170px;border-radius:50%;border:22px solid color-mix(in srgb,var(--accent) 26%,transparent);z-index:-1}
+.kpi.hero .eyebrow{color:var(--hero-muted)}
+.kpi.hero .v{font-family:var(--f-display);font-weight:700;letter-spacing:-.03em}
+.bar .track{border:0;border-radius:999px}
+.bar .fill{border-radius:999px}
+.meter{border:0;border-radius:999px}
+.vid{border:0;border-radius:var(--r-md);background:var(--surface-2)}
+.toast{border-radius:999px}
+.prices td .pb{border-radius:999px}
+
+/* Bottom tab bar: floating dark pill, icon only, active item in a red circle */
+nav.tabs{background:var(--bg);border-top:0;backdrop-filter:none;-webkit-backdrop-filter:none;padding:6px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+nav.tabs .in{background:var(--navbg);border-radius:999px;height:64px;padding:0 8px;max-width:560px;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+nav.tabs a{color:#A3A5AB;gap:0;font-size:0}
+nav.tabs a .lbl{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+nav.tabs a svg{width:22px;height:22px;box-sizing:content-box;padding:13px;border-radius:50%;transition:background .15s,color .15s}
+nav.tabs a[aria-current="page"]{color:var(--accent-ink)}
+nav.tabs a[aria-current="page"] svg{background:var(--accent)}
+nav.tabs a .badge{top:6px;left:calc(50% + 8px);box-shadow:0 0 0 2px var(--navbg);font-size:10px}
+@media (max-width:380px){nav.tabs a svg{padding:10px}}
+nav.tabs .in{grid-template-columns:repeat(5,1fr)}
+.sechead{align-items:center}
+.sechead h3 small{font-size:13px;color:var(--muted);font-weight:600;margin-left:6px}
+.vtog{display:flex;gap:2px;background:var(--surface);border-radius:999px;padding:3px;box-shadow:var(--shadow)}
+.vtog button{width:36px;height:32px;border:0;border-radius:999px;background:transparent;color:var(--muted);display:grid;place-items:center;cursor:pointer}
+.vtog button svg{width:18px;height:18px}
+.vtog button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+button.lrow{width:100%;border:0;border-top:1px solid var(--line);background:transparent;text-align:left;font:inherit;color:inherit}
+.list>button.lrow:first-child{border-top:0}
+.lmeta{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.lmeta .pill{font-size:11px;padding:1px 7px}
+.lprice{font-family:var(--f-mono);font-weight:600;font-size:13.5px;white-space:nowrap;align-self:center}
+/* กำหนดการ / Wishlist tabs on one page */
+.ptabs{margin-top:4px;display:flex;gap:4px;background:var(--surface);border-radius:999px;padding:5px;box-shadow:var(--shadow)}
+.ptabs a{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:600;font-size:15px}
+.ptabs a[aria-selected="true"]{background:var(--ink);color:var(--surface)}
+.ptabs a span{background:var(--accent);color:var(--accent-ink);border-radius:999px;font-size:11px;font-weight:700;padding:0 7px;line-height:18px}
+.kpis.k4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.kpis.k4 .kpi{padding:10px 12px;text-decoration:none;color:inherit}
+.kpis.k4 .kpi .v{font-size:clamp(20px,5vw,26px)}
+.kpis.k4 a.kpi{border-color:color-mix(in srgb,var(--accent) 45%,var(--line))}
+@media (max-width:520px){.kpis.k4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.rentq{display:flex;gap:6px;flex-wrap:wrap}
+.ptabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;min-height:42px;border-radius:999px;border:0;background:transparent;cursor:pointer;color:var(--muted);font-weight:600;font-size:15px}
+.ptabs button[aria-selected="true"]{background:var(--ink);color:var(--surface)}
+nav.tabs .in{grid-template-columns:repeat(4,1fr)}
+@media (max-width:520px){.rowbtns:has([data-rentbtn]){flex-direction:column;align-items:stretch;flex:0 0 auto}}
+.rlt{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;background:none;border:0;padding:0;cursor:pointer;color:inherit;text-align:left;font:inherit}
+.rlt-b{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--muted);white-space:nowrap}
+.rlt-b svg{width:18px;height:18px;transition:transform .15s}
+.rlt[aria-expanded="true"] .rlt-b svg{transform:rotate(180deg)}
+button.month-h.mfold{display:flex;width:100%;border:0;color:inherit;cursor:pointer;text-align:left;align-items:center}
+.mfold span{display:inline-flex;align-items:center;gap:4px}
+.mfold svg{width:16px;height:16px;transition:transform .15s}
+.mfold[aria-expanded="false"] svg{transform:rotate(-90deg)}
+.dnav{display:inline-flex;align-items:center;gap:2px}
+.dnav .btn{min-width:36px;padding:5px 8px}
+</style>
+
+<header class="top"><div class="wrap">
+  <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M7.5 7h9a5 5 0 014.9 6l-.8 4a2.6 2.6 0 01-4.5 1.2L14.5 16h-5l-1.6 2.2a2.6 2.6 0 01-4.5-1.2l-.8-4A5 5 0 017.5 7z"/><path d="M8 10v3M6.5 11.5h3"/><circle cx="16" cy="10.8" r=".6" fill="currentColor"/><circle cx="17.5" cy="12.6" r=".6" fill="currentColor"/></svg></span>
+  <div class="brand"><small>PS5 · Switch 1 · Switch 2</small>Games Library</div>
+  <span class="sync" id="sync"><i></i><span>กำลังเชื่อมต่อ…</span></span>
+  <button class="iconbtn" id="addBtn" type="button" aria-label="เพิ่มเกม" title="เพิ่มเกม"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+</div></header>
+
+<main id="scroller"><div class="wrap" id="app"></div></main>
+<nav class="tabs" aria-label="เมนู"><div class="in">
+  <a href="#library" data-tab="library" aria-label="คลังเกม" title="คลังเกม"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="4" height="16" rx="1"/><rect x="9" y="4" width="4" height="16" rx="1"/><path d="M15.5 5.2l3.8-1 3 15.4-3.8 1z"/></svg><span class="lbl">คลังเกม</span></a>
+  <a href="#releases" data-tab="releases" aria-label="กำหนดการ" title="กำหนดการ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg><span class="lbl">กำหนดการ</span></a>
+  <a href="#summary" data-tab="summary" aria-label="สรุป" title="สรุป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span class="lbl">สรุป</span></a>
+  <a href="#subs" data-tab="subs" aria-label="สมาชิก" title="สมาชิก"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/></svg><span class="lbl">สมาชิก</span><span class="badge" id="subBadge" hidden></span></a>
+</div></nav>
+<div id="vpProbe" aria-hidden="true" style="position:fixed;inset:0;pointer-events:none;opacity:0;z-index:-1"></div>
+
+
+
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+
+<script src="js/vendor/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/backend.js"></script>
+<script>
+(() => {
+"use strict";
+const PLAT = { PS5:{label:"PS5"}, NS2:{label:"Switch 2"}, NS1:{label:"Switch 1"} };
+const PLAT_ORDER = ["PS5","NS2","NS1"];
+const DEFAULT_STORES = ["PlayStation Store","Nintendo eShop"];
+const TABS = ["library","rentals","loans","releases","wishlist","top10","summary","subs"];
+
+const S = {
+  mode:"connecting", games:[], releases:null, loaded:false,
+  tab:"library",
+  lib:{q:"",plat:"all",loan:"all",sort:"bought",genre:"",view:(()=>{ try{ return localStorage.getItem("gameslib.view")==="list"?"list":"grid"; }catch{ return "grid"; } })()},
+  rel:{when:"upcoming",plat:"all",q:"",year:"",genre:""}, catalog:[], top10:null, top:{plat:"PS5",kind:"hot"},
+  jobs:{}, jobBusy:"", subs:[], subSheet:null, rentals:[], rentSheet:null, sheet:null, detail:null, info:{}, confirmDelete:false, importPreview:null,
+};
+let DB=null, SAMPLE=null, DOWNLOADS=null, ASSETS=null, MCP=null;
+const JOBS={ sync:{id:"trig_01SXVExjo9DQP37bAqNwG2Pa", mins:20}, images:{id:"", mins:5}, top10:{id:"trig_01JwRMNVSxY1H9wP8gSEwSay", mins:5} };
+
+/* ---------- helpers ---------- */
+const $ = (s,r=document)=>r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const today = () => { const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); };
+const fmtDate = (iso, opt) => { if(!iso) return ""; const d=new Date(iso+"T00:00:00"); if(isNaN(d)) return iso; return d.toLocaleDateString("th-TH-u-ca-gregory", opt || {day:"numeric",month:"short",year:"numeric"}); };
+const monthName = iso => new Date(iso+"T00:00:00").toLocaleDateString("th-TH-u-ca-gregory",{month:"long",year:"numeric"});
+const baht = n => "฿" + (Math.round((+n||0)*100)/100).toLocaleString("en-US",{maximumFractionDigits:2});
+const daysBetween = (a,b) => Math.round((new Date(b+"T00:00:00") - new Date(a+"T00:00:00"))/86400000);
+const norm = s => String(s||"").toLowerCase().replace(/[™®©:'’\-–—.,!&+]/g," ").replace(/nintendo switch 2 edition|switch 2 edition/g,"").replace(/\s+/g," ").trim();
+const uid = () => "g" + Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+const currentLoan = g => (g.loans||[]).find(l => !l.back) || null;
+const owned = () => S.games.filter(g => g.status !== "wishlist");
+const wishlist = () => S.games.filter(g => g.status === "wishlist");
+
+function toast(msg){
+  const r=$("#toastRoot"); r.innerHTML=`<div class="toast" role="status">${esc(msg)}</div>`;
+  clearTimeout(toast.t); toast.t=setTimeout(()=>{r.innerHTML="";},2600);
+}
+
+/* ---------- storage (cloud db, else this browser) ---------- */
+const LS_KEY="gameslib.v1";
+function lsLoad(){ try{ return JSON.parse(localStorage.getItem(LS_KEY)||"[]"); }catch{ return []; } }
+function lsSave(){ try{ localStorage.setItem(LS_KEY, JSON.stringify(S.games)); }catch{} }
+
+async function saveGame(g){
+  g.updatedAt = new Date().toISOString();
+  if(!g.createdAt) g.createdAt = g.updatedAt;
+  const { id, ...data } = g;
+  if(S.mode==="cloud"){
+    try{ await DB.collection("games").doc(id).set(JSON.parse(JSON.stringify(data))); }
+    catch(e){ toast(e && e.code==="quota_exceeded" ? "พื้นที่เก็บข้อมูลเต็ม ลบเกมที่ไม่ใช้ก่อนแล้วลองใหม่" : "บันทึกไม่สำเร็จ ลองอีกครั้ง"); throw e; }
+  } else {
+    const i=S.games.findIndex(x=>x.id===id); if(i>=0) S.games[i]=g; else S.games.push(g);
+    lsSave(); render();
+  }
+}
+async function deleteGame(id){
+  if(S.mode==="cloud"){ await DB.collection("games").doc(id).delete(); }
+  else { S.games=S.games.filter(g=>g.id!==id); lsSave(); render(); }
+}
+
+function setSync(){
+  const el=$("#sync");
+  el.className="sync "+(S.mode==="cloud"?"on":(S.mode==="local"||S.mode==="login")?"local":"");
+  el.querySelector("span").textContent = S.mode==="cloud" ? "ซิงก์ทุกเครื่อง" : S.mode==="local" ? "เก็บในเครื่องนี้" : S.mode==="login" ? "ยังไม่ได้เข้าสู่ระบบ" : "กำลังเชื่อมต่อ…";
+  el.title = el.querySelector("span").textContent;
+}
+
+async function boot(){
+  render();
+  const B=window.GL_BACKEND;
+  if(!B){ goLocal(); return; }
+  DOWNLOADS=B.downloads;
+  let sess=null; try{ sess=await B.auth.session(); }catch{}
+  if(!sess){ S.mode="login"; S.loaded=true; setSync(); render(); return; }
+  DB=B.db; ASSETS=B.assets; S.mode="cloud"; setSync(); B.startRealtime();
+  DB.collection("games").onSnapshot(snap=>{
+    S.games = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+    S.loaded=true; render();
+  }, ()=>{ toast("การเชื่อมต่อหลุด ลองเปิดหน้าใหม่"); });
+  DB.doc("meta/releases").onSnapshot(snap=>{
+    S.releases = snap.exists ? snap.data() : { items:[] }; S.relCache=null; S.relGenreOpts=null;
+    render();
+  }, ()=>{});
+  DB.doc("meta/top10").onSnapshot(snap=>{ S.top10 = snap.exists ? snap.data() : null; if(S.tab==="top10") render(); }, ()=>{});
+  DB.collection("catalog").onSnapshot(snap=>{
+    const all=[]; S.catalogDocs={}; snap.docs.forEach(d=>{ const data=d.data(); S.catalogDocs[d.id]=data; const it=data.items; if(Array.isArray(it)) all.push(...it); }); S.catalog=all; S.relCache=null; S.relGenreOpts=null; render();
+  }, ()=>{});
+  DB.collection("subs").onSnapshot(snap=>{
+    S.subs = snap.docs.map(d=>({ id:d.id, ...d.data() })); render();
+  }, ()=>{});
+  DB.collection("rentals").onSnapshot(snap=>{
+    S.rentals = snap.docs.map(d=>({ id:d.id, ...d.data() })); render();
+  }, ()=>{});
+  DB.collection("gameinfo").onSnapshot(snap=>{
+    const m={}; snap.docs.forEach(d=>{ m[d.id]=d.data(); }); S.info=m; render();
+  }, ()=>{});
+  DB.doc("meta/jobs").onSnapshot(snap=>{ S.jobs=snap.exists?snap.data():{}; render(); }, ()=>{});
+}
+function viewLogin(){
+  return `<section class="view"><div class="panel" style="max-width:420px;margin:24px auto;width:100%">
+    <h2 class="vt" style="margin:0">เข้าสู่ระบบ</h2>
+    <div class="sub">ใช้อีเมลและรหัสผ่านที่ตั้งไว้ใน Supabase</div>
+    <form id="loginForm" style="display:flex;flex-direction:column;gap:12px">
+      <div class="field"><label for="li-email">อีเมล</label><input id="li-email" type="email" autocomplete="username" required></div>
+      <div class="field"><label for="li-pass">รหัสผ่าน</label><input id="li-pass" type="password" autocomplete="current-password" required></div>
+      <div class="hint" id="li-msg"></div>
+      <button class="btn primary" type="submit">เข้าสู่ระบบ</button>
+    </form></div></section>`;
+}
+document.addEventListener("submit", async e=>{
+  if(e.target.id!=="loginForm") return; e.preventDefault();
+  const msg=$("#li-msg"), btn=e.target.querySelector("button"); btn.disabled=true; msg.textContent="กำลังเข้าสู่ระบบ…";
+  try{ await window.GL_BACKEND.auth.signIn($("#li-email").value.trim(), $("#li-pass").value); location.reload(); }
+  catch(err){ btn.disabled=false; msg.textContent="เข้าสู่ระบบไม่สำเร็จ ตรวจอีเมลและรหัสผ่านอีกครั้ง"; }
+});
+function goLocal(){
+  S.mode="local"; S.games=lsLoad(); S.subs=subsLsLoad(); S.rentals=rentLsLoad(); S.loaded=true; S.releases=S.releases||{items:[]}; setSync(); render();
+}
+
+/* ---------- routing ---------- */
+function readHash(){ const h=(location.hash||"").slice(1); S.tab = TABS.includes(h) ? h : "library"; }
+window.addEventListener("hashchange",()=>{ readHash(); render(); const sc=document.getElementById("scroller"); if(sc) sc.scrollTop=0; });
+
+/* ---------- render ---------- */
+function render(){
+  setSync();
+  const navTab = (S.tab==="rentals"||S.tab==="loans") ? "library" : (S.tab==="wishlist"||S.tab==="top10") ? "releases" : S.tab;
+  document.querySelectorAll("nav.tabs a").forEach(a=>{ a.toggleAttribute("aria-current", a.dataset.tab===navTab); if(a.dataset.tab===navTab) a.setAttribute("aria-current","page"); });
+  const lent = owned().filter(currentLoan).length;
+  const b=$("#loanBadge"); if(b){ b.hidden = !lent; b.textContent = lent; }
+  const soon=subsSoon(); const sb=$("#subBadge"); if(sb){ sb.hidden=!soon; sb.textContent="!"; }
+  const ab=$("#addBtn"); if(ab){ const t=S.tab==="subs"?"เพิ่มสมาชิก":S.tab==="rentals"?"บันทึกการเช่า":"เพิ่มเกม"; ab.setAttribute("aria-label",t); ab.title=t; }
+  const app=$("#app");
+  if(S.mode==="login"){ if(!app.querySelector("#loginForm")) app.innerHTML=viewLogin(); return; }
+  if(!S.loaded){ app.innerHTML = `<section class="view"><div class="empty"><b>กำลังโหลดคลังเกม…</b><span>ข้อมูลซิงก์ทุกเครื่องที่เข้าสู่ระบบบัญชีเดียวกัน</span></div></section>`; return; }
+  if(S.detail) renderDetail();
+  const v = { library:viewLibrary, loans:viewLoans, releases:viewReleases, wishlist:viewWishlist, top10:viewTop10, summary:viewSummary, subs:viewSubs, rentals:viewRentals }[S.tab];
+  const html=v(); const ae=document.activeElement;
+  if(ae && ae.id && ae.tagName==="INPUT" && app.contains(ae)) patchApp(app, html, ae); else app.innerHTML = html;
+}
+/* Re-render around a focused input without replacing it, so typing and the iOS keyboard are not interrupted */
+function patchApp(app, html, ae){
+  const tpl=document.createElement("template"); tpl.innerHTML=html.trim();
+  const newSec=tpl.content.firstElementChild, oldSec=app.firstElementChild;
+  if(!newSec || !oldSec || newSec.tagName!==oldSec.tagName){ app.innerHTML=html; return; }
+  const keepOld=[...oldSec.children].find(c=>c.contains(ae));
+  const keepNew=[...newSec.children].find(c=>c.querySelector("#"+CSS.escape(ae.id)));
+  if(!keepOld || !keepNew){ app.innerHTML=html; return; }
+  const kids=[...newSec.children]; const i=kids.indexOf(keepNew);
+  [...oldSec.children].forEach(c=>{ if(c!==keepOld) c.remove(); });
+  kids.slice(0,i).forEach(n=>oldSec.insertBefore(n,keepOld));
+  kids.slice(i+1).forEach(n=>oldSec.appendChild(n));
+  // refresh the kept block's other controls (chips, selects) but leave the focused input alone
+  [...keepNew.querySelectorAll("[aria-pressed]")].forEach(n=>{ const o=keepOld.querySelector(`[data-chip="${n.dataset.chip}"][data-v="${n.dataset.v}"]`); if(o) o.setAttribute("aria-pressed",n.getAttribute("aria-pressed")); });
+}
+
+const GENRES_TH=["แอ็กชัน","แอ็กชันผจญภัย","ผจญภัย","RPG","แอ็กชัน RPG","JRPG","โลกเปิด","ยิง (Shooter)","FPS","แพลตฟอร์ม","Metroidvania","Soulslike","ต่อสู้ (Fighting)","แข่งรถ","กีฬา","ปริศนา","กลยุทธ์","จำลองสถานการณ์","สร้าง/ทำฟาร์ม","สยองขวัญ","เอาชีวิตรอด","Roguelike","ปาร์ตี้","ดนตรี/จังหวะ","Visual Novel","MMO"];
+function splitGenres(s){ return String(s||"").split(/\s*[,/;|]\s*/).map(x=>x.trim()).filter(x=>x && !/[\u0E00-\u0E7F]/.test(x)); }
+function catalogGenre(title,plat){ allReleases(); const n=norm(title); return S.genreMap.get(n+"|"+plat) || S.genreMap.get(n) || ""; }
+function gameGenre(g){ return [catalogGenre(g.title,g.platform), infoOf(g.title)?.genre, g.genre].find(x=>splitGenres(x).length) || ""; }
+function genreKey(x){ return x.toLowerCase().replace(/[\s\-_]+/g," ").trim(); }
+function genreOptions(values){
+  const m=new Map(); values.forEach(v=>splitGenres(v).forEach(x=>{ const k=genreKey(x); const e=m.get(k)||{label:x.charAt(0).toUpperCase()+x.slice(1),n:0}; e.n++; m.set(k,e); }));
+  return [...m.entries()].sort((a,b)=>b[1].n-a[1].n).map(([k,e])=>({k,label:e.label,n:e.n}));
+}
+function hasGenre(v,k){ return splitGenres(v).some(x=>genreKey(x)===k); }
+function genreSelect(id,opts,val,limit){
+  if(!opts.length) return "";
+  const list=opts.slice(0,limit||60);
+  if(val && !list.some(o=>o.k===val)){ const f=opts.find(o=>o.k===val); if(f) list.push(f); }
+  return `<select class="sel" id="${id}" aria-label="แนวเกม"><option value="">ทุกแนวเกม</option>${list.map(o=>`<option value="${esc(o.k)}" ${o.k===val?"selected":""}>${esc(o.label)} (${o.n})</option>`).join("")}</select>`;
+}
+function genreBoxHTML(d){ const gn=d.title?gameGenre(d):""; return gn?`<div style="display:flex;gap:6px;flex-wrap:wrap">${splitGenres(gn).map(x=>`<span class="pill soft">${esc(x)}</span>`).join("")}</div>`:`<div class="hint">${d.title?"ยังไม่มีข้อมูลแนวเกมในฐานข้อมูล ระบบจะเติมให้อัตโนมัติ":"ใส่ชื่อเกมแล้วแนวเกมจะขึ้นจากฐานข้อมูลเอง"}</div>`; }
+function platLabel(p){ return p==="NS2" ? `Switch<span class="n2">2</span>` : p==="NS1" ? "Switch 1" : p==="PS5" ? "PS5" : esc(p); }
+const isBoth = g => !!g && g.platform!=="PS5" && g.both===true;
+function gamePlatLabel(g){ return isBoth(g) ? "Switch 1 + 2" : (g.ps4 && g.platform==="PS5") ? "PS4" : platLabel(g.platform); }
+function gamePlats(g){ return isBoth(g) ? ["NS2","NS1"] : [g.platform]; }
+const fmtLabel = g => g.format==="digital" ? "ดาวน์โหลด" : (g.platform==="PS5" ? "แผ่น" : "ตลับ");
+const PS4TAG=`<span class="ptag PS5">PS4</span>`;
+function platTag(p){ return `<span class="ptag ${p}">${platLabel(p)}</span>`; }
+
+function gameCard(g){
+  const loan=currentLoan(g);
+  let pill = `<span class="pill fmt ${g.format==="digital"?"dl":"disc"}">${fmtLabel(g)}</span>`;
+  if(loan) pill+=`<span class="pill warn">${esc(loan.who)} ยืม</span>`;
+  const by=[g.developer,g.publisher].filter(Boolean).filter((x,i,a)=>a.indexOf(x)===i).join(" / ");
+  const meta=[];
+  const gen=gameGenre(g);
+  if(g.purchaseDate) meta.push(`ซื้อ ${g.purchaseApprox?"≈ ":""}${fmtDate(g.purchaseDate)}`);
+  if(g.store) meta.push(esc(g.store));
+  if(g.releaseDate) meta.push(`วางขาย ${fmtDate(g.releaseDate)}`);
+  const cov=coverOf(g.title,g);
+  return `<button class="card" type="button" data-detail="${esc(g.id)}">
+    <div class="band ${esc(g.platform)}"><span>${gamePlatLabel(g)}</span></div>
+    <div class="body hc">
+      ${cov?coverHTML(cov,"thumb",""):thumbHTML(g.title,g.platform,"","thumb ph rthumb")}
+      <div class="title">${esc(g.title)}</div>
+      ${by?`<div class="who">${esc(by)}</div>`:""}
+      <div class="meta">${pill}${gen?splitGenres(gen).slice(0,2).map(x=>`<span class="pill soft">${esc(x)}</span>`).join(""):""}<span>${meta.join(" · ")}</span></div>
+    </div></button>`;
+}
+
+function chipRow(group, opts, val){
+  return `<div class="chips" role="group">${opts.map(([v,l])=>`<button type="button" class="chip" data-chip="${group}" data-v="${v}" aria-pressed="${v===val}">${l}</button>`).join("")}</div>`;
+}
+
+const IC={
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>',
+  swap:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h11l-3-3M17 17H6l3 3"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  heart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 20s-7-4.4-7-10a4 4 0 017-2.6A4 4 0 0119 10c0 5.6-7 10-7 10z"/></svg>',
+  disc:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg>',
+};
+function heroMoney(n){ const v=Math.round((+n||0)*100)/100; const w=Math.floor(v); const c=Math.round((v-w)*100); return `฿${w.toLocaleString("en-US")}<small>.${String(c).padStart(2,"0")}</small>`; }
+function libHero(list,total,all){
+  if(!list.length && !S.rentals.length) return "";
+  const dig=list.filter(g=>g.format==="digital").length;
+  const disc=list.filter(g=>g.format!=="digital" && g.platform==="PS5").length;
+  const cart=list.length-dig-disc;
+  const out=S.rentals.filter(r=>!r.returned).length;
+  return `<div class="kpis k4">
+    <div class="kpi"><div class="eyebrow">แผ่น</div><div class="v">${disc}</div><div class="sub">PS5</div></div>
+    <div class="kpi"><div class="eyebrow">ตลับ</div><div class="v">${cart}</div><div class="sub">Switch</div></div>
+    <div class="kpi"><div class="eyebrow">ดาวน์โหลด</div><div class="v">${dig}</div><div class="sub">ทุกเครื่อง</div></div>
+    <a class="kpi" href="#rentals"><div class="eyebrow">เช่า</div><div class="v">${S.rentals.length}</div><div class="sub">${out?`เช่าอยู่ ${out}`:"ครั้ง"}</div></a>
+  </div>`;
+}
+
+function planTabs(cur){
+  const n=wishlist().length;
+  return `<div class="ptabs" role="tablist"><a href="#releases" role="tab" aria-selected="${cur==="releases"}">กำหนดการ</a><a href="#wishlist" role="tab" aria-selected="${cur==="wishlist"}">Wishlist${n?` <span>${n}</span>`:""}</a><a href="#top10" role="tab" aria-selected="${cur==="top10"}">Top 10</a></div>`;
+}
+
+function viewToggle(v){
+  const b=(k,lab,svg)=>`<button type="button" data-libview="${k}" aria-pressed="${v===k}" aria-label="${lab}" title="${lab}">${svg}</button>`;
+  return `<div class="vtog" role="group" aria-label="รูปแบบการแสดง">${b("grid","แบบตาราง",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>')}${b("list","แบบรายชื่อ",'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1" fill="currentColor"/><circle cx="4.5" cy="12" r="1" fill="currentColor"/><circle cx="4.5" cy="18" r="1" fill="currentColor"/></svg>')}</div>`;
+}
+function gameRow(g){
+  const loan=currentLoan(g);
+  const gen=gameGenre(g);
+  const sub=[`<span class="pill fmt ${g.format==="digital"?"dl":"disc"}">${fmtLabel(g)}</span>`];
+  if(loan) sub.push(`<span class="pill warn">${esc(loan.who)} ยืม</span>`);
+  if(gen) sub.push(`<span>${esc(splitGenres(gen).slice(0,2).join(", "))}</span>`);
+  return `<button class="row click lrow" type="button" data-detail="${esc(g.id)}">${thumbHTML(g.title,g.platform,coverOf(g.title,g)||"","rthumb")}
+    <div class="grow"><div class="t">${esc(g.title)}</div><div class="s lmeta">${isBoth(g)?platTag("NS2")+platTag("NS1"):(g.ps4&&g.platform==="PS5")?PS4TAG:platTag(g.platform)}${sub.join("")}</div></div></button>`;
+}
+
+function viewLibrary(){
+  const L=S.lib; const all=owned();
+  let list=all.filter(g=>{
+    if(L.plat!=="all" && !gamePlats(g).includes(L.plat)) return false;
+    if(L.genre && !hasGenre(gameGenre(g),L.genre)) return false;
+    if(L.loan==="home" && currentLoan(g)) return false;
+    if(L.loan==="lent" && !currentLoan(g)) return false;
+    if(L.q){ const q=norm(L.q); if(!norm([g.title,g.developer,g.publisher,g.store,currentLoan(g)?.who].join(" ")).includes(q)) return false; }
+    return true;
+  });
+  const sorters={
+    bought:(a,b)=>(b.purchaseDate||"").localeCompare(a.purchaseDate||"") || (b.createdAt||"").localeCompare(a.createdAt||""),
+    title:(a,b)=>a.title.localeCompare(b.title),
+    price:(a,b)=>(+b.price||0)-(+a.price||0),
+    release:(a,b)=>(b.releaseDate||"").localeCompare(a.releaseDate||""),
+  };
+  list.sort(sorters[L.sort]);
+  const total=list.reduce((s,g)=>s+(+g.price||0),0);
+  const banner = S.mode==="local" ? `<div class="banner">ตอนนี้ข้อมูลเก็บไว้ในเบราว์เซอร์นี้เท่านั้น เข้าสู่ระบบเพื่อซิงก์ทุกเครื่อง</div>` : "";
+  if(!all.length){
+    return `<section class="view">${banner}${libTabs("library")}<h2 class="vt">คลังเกม</h2>
+    <div class="empty"><b>ยังไม่มีเกมในคลัง</b><span>กด “+ เพิ่มเกม” เพื่อบันทึกเกมแรก หรือเลือกจากกำหนดการแล้วกด “ซื้อแล้ว”<br>มีข้อมูลใน Notion อยู่แล้ว? ส่งออกเป็น CSV แล้วนำเข้าได้ที่แท็บสรุป</span>
+    <div class="tools" style="justify-content:center"><button class="btn primary" data-act="add">+ เพิ่มเกม</button><a class="btn" href="#releases">เปิดกำหนดการ</a><a class="btn" href="#summary">นำเข้า CSV</a></div></div></section>`;
+  }
+  return `<section class="view">${banner}
+    ${libTabs("library")}
+    ${libHero(list,total,all)}
+    <div class="tools">
+      ${genreSelect("libGenre",genreOptions(all.map(gameGenre)),L.genre)}
+      <select class="sel" id="libSort" aria-label="เรียงตาม">
+        <option value="bought" ${L.sort==="bought"?"selected":""}>ซื้อล่าสุด</option>
+        <option value="title" ${L.sort==="title"?"selected":""}>ชื่อ A–Z</option>
+        <option value="price" ${L.sort==="price"?"selected":""}>ราคาสูงสุด</option>
+        <option value="release" ${L.sort==="release"?"selected":""}>วางขายล่าสุด</option>
+      </select>
+    </div>
+    ${chipRow("libPlat",[["all","ทุกเครื่อง"],["PS5","PS5"],["NS2",platLabel("NS2")],["NS1","Switch 1"]],L.plat)}
+    <div class="sechead"><h3>เกมในคลัง <small>${list.length} เกม</small></h3>${viewToggle(L.view)}</div>
+    ${list.length?(L.view==="list"?`<div class="list">${list.map(gameRow).join("")}</div>`:`<div class="grid">${list.map(gameCard).join("")}</div>`):`<div class="empty"><b>ไม่พบเกมที่ตรงกับตัวกรอง</b></div>`}
+  </section>`;
+}
+
+function viewLoans(){
+  const games=owned();
+  const out=games.filter(currentLoan);
+  const byWho={};
+  out.forEach(g=>{ const w=currentLoan(g).who||"ไม่ระบุ"; (byWho[w]=byWho[w]||[]).push(g); });
+  const history=[];
+  games.forEach(g=>(g.loans||[]).forEach(l=>{ if(l.back) history.push({g,l}); }));
+  history.sort((a,b)=>(b.l.back||"").localeCompare(a.l.back||""));
+  const people = Object.keys(byWho).sort((a,b)=>byWho[b].length-byWho[a].length);
+  return `<section class="view">
+    ${libTabs("loans")}
+    <h2 class="vt">การยืม</h2>
+    <div class="statline"><span>ถูกยืมอยู่ <b>${out.length}</b> เกม</span><span>คนยืม <b>${people.length}</b> คน</span><span>คืนแล้วทั้งหมด <b>${history.length}</b> ครั้ง</span></div>
+    ${people.length? people.map(w=>`<div class="person"><header><span class="avatar">${esc(w.trim().charAt(0)||"?")}</span><div class="grow"><div class="t">${esc(w)}</div><div class="s">ยืมอยู่ ${byWho[w].length} เกม</div></div></header>
+      ${byWho[w].map(g=>{const l=currentLoan(g);const d=daysBetween(l.out||today(),today());return `<div class="row">${thumbHTML(g.title,g.platform,coverOf(g.title,g)||"","rthumb")}<div class="grow"><div class="t">${esc(g.title)}</div><div class="s lmeta">${platTag(g.platform)}<span>ยืมไปเมื่อ ${fmtDate(l.out)||"—"} · ${d} วันแล้ว</span></div></div><button class="btn small" data-return="${esc(g.id)}">คืนแล้ว</button></div>`;}).join("")}
+    </div>`).join("") : `<div class="empty"><b>ทุกแผ่นอยู่กับคุณครบ</b><span>เปิดเกมในคลังแล้วกรอก “ให้ใครยืม” เพื่อเริ่มติดตาม</span></div>`}
+    <h3 class="st">ประวัติการคืน</h3>
+    ${history.length?`<div class="list">${history.slice(0,60).map(({g,l})=>`<div class="row">${thumbHTML(g.title,g.platform,coverOf(g.title,g)||"","rthumb")}<div class="grow"><div class="t">${esc(g.title)}</div><div class="s lmeta">${platTag(g.platform)}<span>${esc(l.who)} · ${fmtDate(l.out)||"?"} → ${fmtDate(l.back)}</span></div></div></div>`).join("")}</div>`:`<div class="sub">ยังไม่มีประวัติการคืน</div>`}
+  </section>`;
+}
+
+function findOwnedMatch(title, platforms){
+  const t=norm(title);
+  return S.games.filter(g=>norm(g.title)===t && (!platforms || platforms.includes(g.platform)));
+}
+
+function allReleases(){
+  if(S.relCache) return S.relCache;
+  const m=new Map();
+  const add=r=>{ if(!r||!r.t||!r.d||!Array.isArray(r.p)) return; const k=norm(r.t)+"|"+r.d; const ex=m.get(k);
+    if(ex){ ex.p=[...new Set([...ex.p,...r.p])]; ["dev","pub","c"].forEach(f=>{ if(!ex[f]&&r[f]) ex[f]=r[f]; }); } else m.set(k,{...r,p:[...r.p]}); };
+  S.catalog.forEach(add); ((S.releases?.items)||[]).forEach(add);
+  S.relCache=[...m.values()]; S.relCache.forEach(r=>{ r._n=norm(r.t); r._q=norm(r.t+" "+(r.dev||"")+" "+(r.pub||"")); }); S.coverMap=new Map(); S.genreMap=new Map(); S.relCache.forEach(r=>{ const n=norm(r.t); if(r.c) S.coverMap.set(n,r.c); if(r.g){ r.p.forEach(p=>S.genreMap.set(n+"|"+p,r.g)); if(!S.genreMap.has(n)) S.genreMap.set(n,r.g); } }); return S.relCache;
+}
+function viewReleases(){
+  const R=S.rel; const items=allReleases(); const t=today();
+  if(!items.length){
+    return `<section class="view">${planTabs("releases")}<div class="empty"><b>ยังไม่มีข้อมูลกำหนดการ</b><span>ระบบจะดึงข้อมูลใหม่ให้เองทุกวันเวลา 12:00 น.</span></div></section>`;
+  }
+  const pastYears=[...new Set(items.filter(r=>r.d<t&&(R.plat==="all"||r.p.includes(R.plat))).map(r=>r.d.slice(0,4)))].sort().reverse();
+  if(R.when==="past" && (!R.year || (R.year!=="all" && !pastYears.includes(R.year)))) R.year="all";
+  const qn=norm(R.q);
+  let list=items.filter(r=>{
+    if(R.plat!=="all" && !r.p.includes(R.plat)) return false;
+    if(R.genre && !hasGenre(r.g||infoOf(r.t)?.genre,R.genre)) return false;
+    if(R.q){ if(!r._q.includes(qn)) return false; }
+    if(R.when==="upcoming") return r.d>=t;
+    if(r.d>=t) return false;
+    return (R.q || R.year==="all") ? true : r.d.startsWith(R.year);
+  });
+  list.sort((a,b)=> R.when==="upcoming" ? a.d.localeCompare(b.d) : b.d.localeCompare(a.d));
+  const total=list.length; const lim=R.limit||150; const shown=list.slice(0,lim);
+  const groups=[]; let cur=null;
+  shown.forEach(r=>{ const k=r.d.slice(0,7); if(!cur||cur.k!==k){ cur={k,items:[]}; groups.push(cur);} cur.items.push(r); });
+  const rowHtml = r => {
+    const mine=findOwnedMatch(r.t, r.p);
+    const has=mine.find(g=>g.status!=="wishlist"); const wish=mine.find(g=>g.status==="wishlist");
+    const d=new Date(r.d+"T00:00:00");
+    const wd=d.toLocaleDateString("th-TH",{weekday:"short"});
+    const cov=r.c||infoOf(r.t)?.coverId||coverOf(r.t,has||wish)||"";
+    return `<div class="row click" data-reldetail="${esc(r.t)}|${r.d}|${r.p.join(",")}"><div class="day">${d.getDate()}<small>${wd}</small></div>${thumbHTML(r.t,r.p[0],cov,"rthumb")}
+      <div class="grow"><div class="t">${esc(r.t)}</div><div class="s" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:2px">${r.ps4?PS4TAG:r.p.map(platTag).join("")}${r.pub||r.dev?` <span>${esc(r.pub||r.dev)}</span>`:""}${r.g?` <span>· ${esc(splitGenres(r.g).slice(0,2).join(", "))}</span>`:""}${has?` <span class="pill ok">มีแล้ว</span>`:""}${rentTag(r.t)}</div></div>
+      <div class="rowbtns">
+        <button class="btn small heart" data-wish="${esc(r.t)}|${r.d}|${r.p.join(",")}" aria-pressed="${!!wish}" aria-label="Wishlist">${wish?"♥":"♡"}</button>
+        ${r.d<=today()?rentBtn(r.t,"rentrel",`${r.t}|${r.d}|${r.p.join(",")}`,"btn small"):""}<button class="btn small" data-bought="${esc(r.t)}|${r.d}|${r.p.join(",")}">ซื้อ</button>
+      </div></div>`;
+  };
+  return `<section class="view">
+    ${planTabs("releases")}
+    <div class="seg" role="group" style="width:100%">
+      <button type="button" data-relwhen="upcoming" aria-pressed="${R.when==="upcoming"}">กำลังจะออก</button>
+      <button type="button" data-relwhen="past" aria-pressed="${R.when==="past"}">ออกแล้ว</button>
+    </div>
+    <div class="tools"><label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="relQ" type="search" placeholder="ค้นหาเกม" value="${esc(R.q)}"></label>${genreSelect("relGenre",S.relGenreOpts||(S.relGenreOpts=genreOptions(items.map(r=>r.g||infoOf(r.t)?.genre||""))),R.genre,60)}</div>
+    ${chipRow("relPlat",[["all","ทุกเครื่อง"],["PS5","PS5"],["NS2",platLabel("NS2")],["NS1","Switch 1"]],R.plat)}
+    ${R.when==="past"&&!R.q&&pastYears.length>1?chipRow("relYear",[["all","ทุกปี"],...pastYears.map(y=>[y,y])],R.year):""}
+    <div class="statline"><span><b>${total.toLocaleString()}</b> เกม${total>shown.length?` (แสดง ${shown.length})`:""}${R.when==="past"&&!R.q&&R.year!=="all"?` ในปี ${esc(R.year)}`:""}</span></div>
+    ${groups.length? (groups.length>1?`<div class="tools" style="justify-content:flex-end;margin-bottom:-6px"><button type="button" class="btn small ghost" data-relfoldall="${groups.every(g=>relFolded(R.when,g.k))?"0":"1"}" data-relkeys="${groups.map(g=>g.k).join(",")}">${groups.every(g=>relFolded(R.when,g.k))?"แสดงทุกเดือน":"ซ่อนทุกเดือน"}</button></div>`:"") + groups.map(g=>{ const f=relFolded(R.when,g.k); return `<div><button type="button" class="month-h mfold" data-relfold="${g.k}" aria-expanded="${!f}">${monthName(g.k+"-01")}<span>${g.items.length} เกม<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span></button>${f?"":`<div class="list">${g.items.map(rowHtml).join("")}</div>`}</div>`; }).join("") + (total>shown.length?`<button class="btn" style="width:100%;margin-top:12px" data-act="relMore">แสดงเพิ่มอีก ${Math.min(150,total-shown.length)} เกม</button>`:"") : `<div class="empty"><b>ไม่พบเกมในช่วงนี้</b></div>`}
+    ${MCP?`<div class="panel"><h3 class="st" style="margin:0">อัปเดตกำหนดการ</h3><div class="sub">อัปเดตอัตโนมัติทุกวันจันทร์ 05:13 น. ถ้าอยากได้ข้อมูลล่าสุดตอนนี้ กดปุ่มด้านล่าง</div><div class="tools">${jobButton("sync",null,null,"อัปเดตตอนนี้")}</div></div>`:""}
+    <p class="src">ข้อมูลวันวางจำหน่ายรวบรวมจาก ${esc(S.releases.source||"เว็บข่าวเกม")} · อัปเดต ${fmtDate(S.releases.updatedAt)} · วันวางขายอาจเปลี่ยนตามผู้จัดจำหน่าย</p>
+  </section>`;
+}
+
+/* ---------- Top 10 per console (doc meta/top10, refreshed weekly from IGDB) ---------- */
+function viewTop10(){
+  const T=S.top; const data=S.top10;
+  const lists=data&&data.lists||{}; const L=((lists[T.plat]||{})[T.kind])||[];
+  const head=`${planTabs("top10")}
+    <div class="seg" role="group" style="width:100%">
+      <button type="button" data-topkind="hot" aria-pressed="${T.kind==="hot"}">กำลังมาแรง</button>
+      <button type="button" data-topkind="rated" aria-pressed="${T.kind==="rated"}">คะแนนสูง</button>
+    </div>
+    ${chipRow("topPlat",[["PS5","PS5"],["NS2",platLabel("NS2")],["NS1","Switch 1"]],T.plat)}`;
+  const upd=MCP&&JOBS.top10.id&&!JOBS.top10.id.startsWith("__")?`<div class="panel"><h3 class="st" style="margin:0">อัปเดต Top 10</h3><div class="sub">อัปเดตอัตโนมัติทุกวันจันทร์ ถ้าอยากได้ข้อมูลล่าสุดตอนนี้ กดปุ่มด้านล่าง</div><div class="tools">${jobButton("top10",null,null,"อัปเดตตอนนี้")}</div></div>`:"";
+  if(!data) return `<section class="view">${head}<div class="empty"><b>ยังไม่มีข้อมูล Top 10</b><span>ข้อมูลจะอัปเดตเองทุกวันเวลา 12:00 น.</span></div>${upd}</section>`;
+  const row=(r,i)=>{
+    const p=[T.plat]; const mine=findOwnedMatch(r.t,p);
+    const has=mine.find(g=>g.status!=="wishlist"); const wish=mine.find(g=>g.status==="wishlist");
+    const cov=(allReleases(), S.coverMap.get(norm(r.t)))||infoOf(r.t)?.coverId||coverOf(r.t,has||wish)||"";
+    const attr=`${esc(r.t)}|${esc(r.d||"")}|${T.plat}`;
+    const sc=r.score?`<span class="pill ${r.score>=85?"ok":"soft"}">${r.score}</span>`:"";
+    return `<div class="row click" data-reldetail="${attr}"><div class="day">${i+1}</div>${thumbHTML(r.t,T.plat,cov,"rthumb")}
+      <div class="grow"><div class="t">${esc(r.t)}</div><div class="s lmeta">${T.kind==="rated"?sc:""}${r.d?`<span>${fmtDate(r.d)}</span>`:""}${r.pub?`<span>· ${esc(r.pub)}</span>`:""}${has?`<span class="pill ok">มีแล้ว</span>`:""}</div></div>
+      <div class="rowbtns"><button class="btn small heart" data-wish="${attr}" aria-pressed="${!!wish}" aria-label="Wishlist">${wish?"♥":"♡"}</button></div></div>`;
+  };
+  return `<section class="view">${head}
+    <div class="statline"><span>${T.kind==="hot"?"เกมใหม่ในรอบ 1 ปีที่คนสนใจและเล่นมากที่สุดตอนนี้":"เกมใหม่ในรอบ 1 ปีที่นักวิจารณ์ให้คะแนนสูงสุด"}</span></div>
+    ${L.length?`<div class="list">${L.map(row).join("")}</div>`:`<div class="empty"><b>ยังไม่มีข้อมูลของเครื่องนี้</b></div>`}
+    ${upd}
+    <p class="src">ข้อมูลจาก IGDB · ${T.kind==="hot"?"จัดอันดับจากยอดเข้าชม คนกำลังเล่น และคนอยากเล่นบน IGDB (ไม่ใช่ยอดขายจริง)":"คะแนนเฉลี่ยจากนักวิจารณ์ (เต็ม 100)"} · อัปเดต ${fmtDate(data.updatedAt)}</p>
+  </section>`;
+}
+
+function viewWishlist(){
+  const list=wishlist().sort((a,b)=>(a.releaseDate||"9999").localeCompare(b.releaseDate||"9999"));
+  const t=today();
+  return `<section class="view">
+    ${planTabs("wishlist")}
+    <div class="statline"><span><b>${list.length}</b> เกมที่อยากได้</span>${list.some(g=>g.price)?`<span>งบโดยประมาณ <b class="mono">${baht(list.reduce((s,g)=>s+(+g.price||0),0))}</b></span>`:""}</div>
+    ${list.length?`<div class="list">${list.map(g=>{
+      const days = g.releaseDate ? daysBetween(t,g.releaseDate) : null;
+      const when = days==null ? "ยังไม่ระบุวันวางขาย" : days>0 ? `อีก ${days} วัน · ${fmtDate(g.releaseDate)}` : days===0 ? "วางขายวันนี้" : `วางขายแล้ว ${fmtDate(g.releaseDate)}`;
+      return `<div class="row click" data-detail="${esc(g.id)}">${thumbHTML(g.title,g.platform,coverOf(g.title,g),"rthumb")}<div class="grow"><div class="t">${esc(g.title)}</div><div class="s" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${gamePlats(g).map(platTag).join("")}<span>${when}</span>${rentTag(g.title)}</div></div>
+        <div class="rowbtns"><button class="btn small" data-detail="${esc(g.id)}">ดูข้อมูล</button>${rentBtn(g.title,"rentwish",g.id,"btn small")}<button class="btn small primary" data-buywish="${esc(g.id)}">ซื้อ</button></div></div>`;}).join("")}</div>`
+    :`<div class="empty"><b>Wishlist ว่างอยู่</b><span>กด ♡ ที่เกมในกำหนดการ หรือเพิ่มเกมแล้วเลือกสถานะ “Wishlist”</span><a class="btn" href="#releases">เปิดกำหนดการ</a></div>`}
+  </section>`;
+}
+
+function bars(rows, cls){
+  const max=Math.max(1,...rows.map(r=>r.v));
+  return rows.map(r=>`<div class="bar"><span class="lbl">${r.label}</span><span class="track"><span class="fill ${cls?cls(r):""}" style="width:${Math.max(2,r.v/max*100)}%;display:block"></span></span><span class="val">${baht(r.v)}<span class="sub"> · ${r.n}</span></span></div>`).join("");
+}
+function groupSum(list, keyFn){
+  const m={}; list.forEach(g=>{ const k=keyFn(g); if(!m[k]) m[k]={k,v:0,n:0}; m[k].v+=(+g.price||0); m[k].n++; }); return Object.values(m);
+}
+
+/* ---------- storage (cover images only) ---------- */
+function fmtMB(b){ return (b/1048576).toLocaleString("th-TH",{maximumFractionDigits:0})+" MB"; }
+function assetIdOf(c){ c=String(c||""); if(c.startsWith("sp:")) return c.split(":")[1]||""; return /^[0-9a-f]{32}$/.test(c)?c:""; }
+function coverIdsInUse(){
+  const keep=new Set(); const add=c=>{ const id=assetIdOf(c); if(id) keep.add(id); };
+  S.games.forEach(g=>add(g.coverId)); Object.values(S.info||{}).forEach(i=>add(i&&i.coverId));
+  (S.catalog||[]).forEach(r=>add(r.c)); ((S.releases&&S.releases.items)||[]).forEach(r=>add(r.c));
+  return keep;
+}
+function storagePanel(){
+  if(!ASSETS || !ASSETS.list || S.mode!=="cloud") return "";
+  const st=S.storage||(S.storage={});
+  if(!st.usage && !st.loading){ st.loading=true; ASSETS.list().then(r=>{ st.usage=r.usage; st.loading=false; render(); }).catch(()=>{ st.loading=false; st.msg="อ่านข้อมูลพื้นที่ไม่สำเร็จ"; render(); }); }
+  const u=st.usage; const pct=u?Math.round(u.files/u.maxFiles*100):0;
+  return `<h3 class="st">พื้นที่เก็บรูป</h3>
+    <div class="panel">
+      ${u?`<div class="bar"><span class="lbl">จำนวนไฟล์</span><span class="track"><span class="fill" style="display:block;width:${pct}%"></span></span><span class="mono">${u.files.toLocaleString()} / ${u.maxFiles.toLocaleString()}</span></div>
+      <div class="bar"><span class="lbl">ขนาด</span><span class="track"><span class="fill" style="display:block;width:${Math.round(u.bytes/u.maxBytes*100)}%"></span></span><span class="mono">${fmtMB(u.bytes)} / ${fmtMB(u.maxBytes)}</span></div>`:`<div class="sub">กำลังอ่านข้อมูลพื้นที่…</div>`}
+      <div class="sub">แอปเก็บเฉพาะรูปปกเกมแล้ว ปุ่มด้านล่างจะลบภาพตัวอย่างทั้งหมดและไฟล์รูปที่ไม่มีเกมไหนใช้ รูปปกที่ใช้อยู่ไม่ถูกลบ</div>
+      ${st.running?`<div class="sub"><b>${esc(st.msg||"กำลังล้าง…")}</b> อย่าปิดหน้านี้จนกว่าจะเสร็จ</div>`
+       :st.confirm?`<div class="confirm"><span class="confirm-q">ลบภาพตัวอย่างและไฟล์ที่ไม่ใช้ถาวร?</span><button class="btn danger solid small" data-act="cleanGo">ยืนยันลบ</button><button class="btn ghost small" data-act="cleanNo">ไม่ลบ</button></div>`
+       :`<div class="tools"><button class="btn" data-act="cleanAsk" ${u?"":"disabled"}>ล้างภาพตัวอย่างและไฟล์ที่ไม่ใช้</button></div>${st.msg?`<div class="hint">${esc(st.msg)}</div>`:""}`}
+    </div>`;
+}
+async function cleanStorage(){
+  const st=S.storage; st.confirm=false; st.running=true; st.msg="กำลังตรวจไฟล์…"; render();
+  try{
+    if(!(S.catalog||[]).length || !S.loaded) throw new Error("ข้อมูลยังโหลดไม่ครบ ลองใหม่อีกครั้ง");
+    // 1) remove screenshot references from the database
+    let docs=0;
+    for(const [k,info] of Object.entries(S.info||{})){ if(info && "shots" in info){ const d={...info}; delete d.shots; await DB.collection("gameinfo").doc(k).set(JSON.parse(JSON.stringify(d))); docs++; } }
+    for(const [k,data] of Object.entries(S.catalogDocs||{})){
+      const items=data.items||[]; if(!items.some(r=>r&&r.s)) continue;
+      await DB.collection("catalog").doc(k).set({...data, items:items.map(r=>{ if(!r||!r.s) return r; const c={...r}; delete c.s; return c; })}); docs++;
+    }
+    if(S.releases && (S.releases.items||[]).some(r=>r&&r.s)){ await DB.doc("meta/releases").set({...S.releases, items:S.releases.items.map(r=>{ if(!r||!r.s) return r; const c={...r}; delete c.s; return c; })}); docs++; }
+    // 2) delete every asset that is not a cover in use (files added in the last 3 hours are kept, in case an upload is still being recorded)
+    const keep=coverIdsInUse(); if(keep.size<10) throw new Error("ไม่พบรายการรูปปก หยุดไว้ก่อนเพื่อความปลอดภัย");
+    const r=await ASSETS.list(); const recent=Date.now()-3*3600e3;
+    const del=r.assets.filter(a=>!keep.has(a.id) && !(Date.parse(a.createdAt)>recent));
+    let n=0, fail=0; const q=[...del];
+    const worker=async()=>{ while(q.length){ const a=q.shift(); try{ await ASSETS.delete(a.id); n++; }catch{ fail++; } if((n+fail)%25===0){ st.msg=`ลบแล้ว ${n.toLocaleString()} จาก ${del.length.toLocaleString()} ไฟล์`; render(); } } };
+    await Promise.all([worker(),worker(),worker(),worker()]);
+    const after=await ASSETS.list(); st.usage=after.usage;
+    st.msg=`เสร็จแล้ว ลบ ${n.toLocaleString()} ไฟล์${fail?` (ลบไม่สำเร็จ ${fail} ไฟล์ กดอีกครั้งได้)`:""} · เหลือ ${after.usage.files.toLocaleString()} ไฟล์`;
+  }catch(e){ st.msg = e && e.message ? e.message : "ล้างไม่สำเร็จ ลองใหม่อีกครั้ง"; }
+  st.running=false; render();
+}
+function sumTabs(){ const v=S.sumView||"buy"; return `<div class="ptabs" role="tablist"><button type="button" role="tab" data-sumview="buy" aria-selected="${v==="buy"}">ค่าใช้จ่ายซื้อ</button><button type="button" role="tab" data-sumview="rent" aria-selected="${v==="rent"}">ค่าใช้จ่ายเช่า</button></div>`; }
+function viewSummary(){
+  if(S.sumView==="rent") return `<section class="view"><h2 class="vt">สรุปค่าใช้จ่าย</h2>${sumTabs()}${rentSummarySection()}</section>`;
+  const list=owned();
+  const total=list.reduce((s,g)=>s+(+g.price||0),0);
+  const thisYear=String(new Date().getFullYear());
+  const yearTotal=list.filter(g=>(g.purchaseDate||"").startsWith(thisYear)).reduce((s,g)=>s+(+g.price||0),0);
+  const priced=list.filter(g=>+g.price>0);
+  const byPlat=groupSum(list,g=>g.platform).sort((a,b)=>PLAT_ORDER.indexOf(a.k)-PLAT_ORDER.indexOf(b.k)).map(r=>({...r,label:platLabel(r.k)}));
+  const byYear=groupSum(list,g=>(g.purchaseDate||"").slice(0,4)||"ไม่ระบุ").sort((a,b)=>b.k.localeCompare(a.k)).map(r=>({...r,label:r.k}));
+  const byFmt=groupSum(list,g=>g.format==="digital"?"ดาวน์โหลด":"แผ่น / ตลับ").map(r=>({...r,label:r.k}));
+  const byStore=groupSum(list,g=>g.store||"ไม่ระบุร้าน").sort((a,b)=>b.v-a.v).slice(0,8).map(r=>({...r,label:esc(r.k)}));
+  const gm={}; list.forEach(g=>{ const gs=splitGenres(gameGenre(g)); (gs.length?gs:["ไม่ระบุแนว"]).forEach(x=>{ const k=genreKey(x); if(!gm[k]) gm[k]={k,label:esc(x),v:0,n:0}; gm[k].v+=(+g.price||0)/(gs.length||1); gm[k].n++; }); });
+  const byGenre=Object.values(gm).sort((a,b)=>b.n-a.n).slice(0,10);
+  const borrowers={}; list.forEach(g=>(g.loans||[]).forEach(l=>{ const w=l.who||"?"; borrowers[w]=(borrowers[w]||0)+1; }));
+  const topB=Object.entries(borrowers).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const ip=S.importPreview;
+  return `<section class="view">
+    <h2 class="vt">สรุปค่าใช้จ่าย</h2>
+    ${sumTabs()}
+    <div class="kpis">
+      <div class="kpi hero"><div class="eyebrow">ใช้ไปทั้งหมด</div><div class="v">${baht(total)}</div><div class="sub" style="color:inherit;opacity:.75">${list.length} เกม · เฉลี่ย ${baht(priced.length?total/priced.length:0)} ต่อเกม</div></div>
+      <div class="kpi"><div class="eyebrow">ปี ${thisYear}</div><div class="v">${baht(yearTotal)}</div></div>
+      <div class="kpi"><div class="eyebrow">ถูกยืมอยู่</div><div class="v">${list.filter(currentLoan).length}</div></div>
+      <div class="kpi"><div class="eyebrow">Wishlist</div><div class="v">${wishlist().length}</div></div>
+    </div>
+    ${list.length?`<div class="panels">
+      <div class="panel"><h3 class="st" style="margin:0">ตามเครื่อง</h3>${bars(byPlat,r=>r.k)}</div>
+      <div class="panel"><h3 class="st" style="margin:0">ตามปีที่ซื้อ</h3>${bars(byYear)}</div>
+      <div class="panel"><h3 class="st" style="margin:0">แผ่น / ตลับ หรือ ดาวน์โหลด</h3>${bars(byFmt)}</div>
+      <div class="panel"><h3 class="st" style="margin:0">ตามแนวเกม</h3>${bars(byGenre)}<div class="hint">เกมที่มีหลายแนว ค่าใช้จ่ายจะแบ่งเท่ากันให้แต่ละแนว</div></div>
+
+      ${topB.length?`<div class="panel"><h3 class="st" style="margin:0">คนที่ยืมบ่อย</h3>${topB.map(([w,n])=>`<div class="bar"><span class="lbl">${esc(w)}</span><span class="track"><span class="fill" style="width:${n/topB[0][1]*100}%;display:block;background:var(--warn)"></span></span><span class="val">${n} ครั้ง</span></div>`).join("")}</div>`:""}
+    </div>`:`<div class="empty"><b>ยังไม่มีค่าใช้จ่ายให้สรุป</b><span>เพิ่มเกมพร้อมราคา แล้วกราฟจะขึ้นที่นี่</span></div>`}
+    <h3 class="st">นำเข้าและสำรองข้อมูล</h3>
+    <div class="panel">
+      <div class="sub">นำเข้าจาก Notion: ในฐานข้อมูล Notion กด ••• → Export → Markdown &amp; CSV แล้วเลือกไฟล์ .csv ที่นี่ ระบบจะจับคู่คอลัมน์ให้อัตโนมัติ (รองรับไฟล์ .json ที่สำรองจากแอพนี้ด้วย)</div>
+      <div class="tools"><label class="btn" for="importFile">เลือกไฟล์ CSV / JSON</label><input id="importFile" type="file" accept=".csv,.json,text/csv,application/json" hidden>
+      <button class="btn" data-act="export" ${S.games.length?"":"disabled"}>สำรองข้อมูลเป็น JSON</button>
+      <button class="btn primary" data-act="exportAll" ${S.mode==="cloud"&&S.loaded?"":"disabled"}>ส่งออกข้อมูลทั้งหมด </button>
+      <button class="btn ghost" data-act="logout">ออกจากระบบ</button></div>
+      ${ip?`<div class="box"><h4>${ip.full?`ไฟล์สำรองทั้งหมด ${esc(ip.name)}`:`พบ ${ip.games.length} เกมในไฟล์ ${esc(ip.name)}`}</h4>${ip.full?`<div class="hint">${esc(ip.summary)} ข้อมูลที่ชื่อซ้ำจะถูกเขียนทับด้วยข้อมูลในไฟล์</div>`:""}
+        ${ip.mapping?`<div class="tblwrap"><table class="map">${ip.mapping.map(([h,f])=>`<tr><td>${esc(h)}</td><td>→ ${esc(f||"ไม่ใช้")}</td></tr>`).join("")}</table></div>`:""}
+        <div class="hint">ตัวอย่าง: ${ip.games.slice(0,3).map(g=>esc(g.title)+" ("+(PLAT[g.platform]?.label||"?")+")").join(", ")}</div>
+        <div class="tools"><button class="btn primary" data-act="doImport">${ip.full?"นำเข้าข้อมูลทั้งหมด":`นำเข้า ${ip.games.length} เกม`}</button><button class="btn ghost" data-act="cancelImport">ยกเลิก</button></div></div>`:""}
+    </div>
+    ${storagePanel()}
+  </section>`;
+}
+
+
+
+/* ---------- subscriptions (PS Plus / Nintendo Switch Online) ---------- */
+/* Thai store prices. PS Plus: price change effective 16 Apr 2025 (PlayStation Blog SEA, reported by Blognone / GamingDose).
+   Nintendo Switch Online: Nintendo Thailand plan page (eShop TH opened 18 Nov 2025). Checked 4 Nov 2026. */
+const SUB_SERVICES={
+  psn:{label:"PlayStation Plus", short:"PS Plus", unit:"month",
+    src:"PlayStation Store ไทย · ราคาที่ประกาศใช้ตั้งแต่ 16 เม.ย. 2025 (ในไทยแพ็กเกจสูงสุดชื่อ Deluxe เทียบเท่า Premium)",
+    plans:[
+      {id:"essential", label:"Essential", desc:"เล่นออนไลน์ เกมรายเดือน Cloud save", prices:{1:270,3:720,12:2200}},
+      {id:"extra", label:"Extra", desc:"Essential + คลังเกม PS4/PS5 หลายร้อยเกม", prices:{1:410,3:1170,12:3720}},
+      {id:"deluxe", label:"Deluxe / Premium", desc:"Extra + เกมคลาสสิก PS1/PS2/PSP และเกมทดลอง", prices:{1:480,3:1380,12:4350}},
+    ]},
+  nso:{label:"Nintendo Switch Online", short:"Switch Online", unit:"day",
+    src:"Nintendo eShop ไทย (nintendo.com/th) · 1 เดือน = 30 วัน, 3 เดือน = 90 วัน, 12 เดือน = 365 วัน",
+    plans:[
+      {id:"ind", label:"Individual", desc:"บัญชีเดียว เล่นออนไลน์ + เกม NES/SNES/Game Boy", prices:{1:99,3:249,12:699}},
+      {id:"fam", label:"Family", desc:"ใช้ได้สูงสุด 8 บัญชี", prices:{12:1299}},
+      {id:"ind-ep", label:"Individual + Expansion Pack", desc:"เพิ่ม N64, GBA, Mega Drive, GameCube (Switch 2) และ DLC บางเกม", prices:{12:1399}},
+      {id:"fam-ep", label:"Family + Expansion Pack", desc:"Expansion Pack สำหรับสูงสุด 8 บัญชี", prices:{12:2499}},
+    ]},
+};
+const SUB_CHECKED="2026-11-04";
+const SUB_LS="gameslib.subs.v1";
+const DUR_LABEL={1:"1 เดือน",3:"3 เดือน",12:"12 เดือน"};
+function subPlan(s){ const sv=SUB_SERVICES[s.service]; return sv && sv.plans.find(p=>p.id===s.plan) || null; }
+function subPlanLabel(s){ const p=subPlan(s); return p ? p.label : (s.plan||"?"); }
+/* Sharing: share = "none" | "host" (I bought it and share with others) | "member" (I am in someone else's plan) */
+const SHARE_MAX={ "nso|fam":7, "nso|fam-ep":7 };
+function shareMembers(s){ return (s.share==="host" && Array.isArray(s.members)) ? s.members.filter(m=>m && (m.name||m.amount)) : []; }
+function myCost(s){
+  if(s.share==="member") return +s.myShare||0;
+  const back=shareMembers(s).reduce((a,m)=>a+(+m.amount||0),0);
+  return Math.max(0,(+s.price||0)-back);
+}
+function shareSummaryHTML(s, end){
+  if(s.share==="member") return `<div class="share"><div class="who"><span>อยู่ในแพ็กเกจของ <b>${esc(s.owner||"ไม่ระบุ")}</b></span><span class="mono">ฉันจ่าย ${baht(s.myShare||0)}</span></div><div class="hint">ใช้ได้ถึง ${fmtDate(end)} ตามแพ็กเกจของเจ้าของ</div></div>`;
+  const ms=shareMembers(s); if(!ms.length) return "";
+  const owe=ms.filter(m=>!m.paid).reduce((a,m)=>a+(+m.amount||0),0);
+  return `<div class="share"><div class="hint">แชร์กับ ${ms.length} คน · ใช้ได้ถึง ${fmtDate(end)} · ฉันจ่ายสุทธิ <b class="mono" style="color:var(--ink)">${baht(myCost(s))}</b></div>
+    ${ms.map(m=>`<div class="who"><span>${esc(m.name||"ไม่ระบุชื่อ")}</span><span style="display:flex;gap:6px;align-items:center"><span class="mono">${baht(m.amount||0)}</span><span class="pill ${m.paid?"ok":"warn"}">${m.paid?"จ่ายแล้ว":"ยังไม่จ่าย"}</span></span></div>`).join("")}
+    ${owe?`<div class="hint">ยังค้างรวม <b class="mono">${baht(owe)}</b></div>`:""}</div>`;
+}
+function addMonthsISO(iso,n){ const [y,m,d]=iso.split("-").map(Number); const t=new Date(y,m-1+n,1); const last=new Date(t.getFullYear(),t.getMonth()+1,0).getDate(); t.setDate(Math.min(d,last)); return isoOf(t); }
+function addDaysISO(iso,n){ const [y,m,d]=iso.split("-").map(Number); return isoOf(new Date(y,m-1,d+n)); }
+function isoOf(t){ return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0"); }
+function subEnd(s){
+  if(!s.start||!/^\d{4}-\d{2}-\d{2}$/.test(s.start)) return "";
+  const m=+s.months||1;
+  return SUB_SERVICES[s.service]?.unit==="day" ? addDaysISO(s.start, m===12?365:m*30) : addMonthsISO(s.start,m);
+}
+function subStep(s,iso,dir){ const n=+s.months||1; return SUB_SERVICES[s.service]?.unit==="day" ? addDaysISO(iso, dir*(n===12?365:n*30)) : addMonthsISO(iso, dir*n); }
+/* With auto-renew on, roll the period forward until it covers today */
+function subNextEnd(s){
+  let end=subEnd(s); if(!end||!s.autoRenew) return end; const t=today(); let guard=0;
+  while(end<t && guard++<500) end=subStep(s,end,1);
+  return end;
+}
+function subStatus(s){
+  const t=today(); const end=subNextEnd(s); if(!end) return {k:"none",end:""};
+  if(s.start>t) return {k:"future",end,left:daysBetween(t,end),startsIn:daysBetween(t,s.start)};
+  const from = end===subEnd(s) ? s.start : subStep(s,end,-1);
+  const left=daysBetween(t,end); const total=Math.max(1,daysBetween(from,end));
+  if(left<0) return {k:"expired",end,left};
+  return {k:left<=7?"bad":left<=30?"warn":"ok",end,left,total};
+}
+function subsLsLoad(){ try{ return JSON.parse(localStorage.getItem(SUB_LS)||"[]"); }catch{ return []; } }
+function subsLsSave(){ try{ localStorage.setItem(SUB_LS, JSON.stringify(S.subs)); }catch{} }
+async function saveSub(s){
+  s.updatedAt=new Date().toISOString(); if(!s.createdAt) s.createdAt=s.updatedAt;
+  const { id, ...data } = s;
+  if(S.mode==="cloud"){
+    try{ await DB.collection("subs").doc(id).set(JSON.parse(JSON.stringify(data))); }
+    catch(e){ toast("บันทึกไม่สำเร็จ ลองอีกครั้ง"); throw e; }
+  } else { const i=S.subs.findIndex(x=>x.id===id); if(i>=0) S.subs[i]=s; else S.subs.push(s); subsLsSave(); render(); }
+}
+async function deleteSub(id){
+  if(S.mode==="cloud"){ await DB.collection("subs").doc(id).delete(); }
+  else { S.subs=S.subs.filter(x=>x.id!==id); subsLsSave(); render(); }
+}
+/* The entry that matters most per service: the active one ending last, else the next queued, else the latest expired */
+function subCurrent(service){
+  const list=S.subs.filter(s=>s.service===service).map(s=>({s,st:subStatus(s)}));
+  const active=list.filter(x=>["ok","warn","bad"].includes(x.st.k)).sort((a,b)=>b.st.end.localeCompare(a.st.end));
+  const future=list.filter(x=>x.st.k==="future").sort((a,b)=>b.st.end.localeCompare(a.st.end));
+  const exp=list.filter(x=>x.st.k==="expired").sort((a,b)=>b.st.end.localeCompare(a.st.end));
+  return { main: active[0]||future[0]||exp[0]||null, queued: active.length? future : future.slice(1), coverEnd: [...active,...future].map(x=>x.st.end).sort().pop()||"" };
+}
+function subsSoon(){ return ["psn","nso"].filter(k=>{ const c=subCurrent(k); const m=c.main; if(!m) return false; if(c.coverEnd && c.coverEnd>m.st.end) return false; return ["bad","warn"].includes(m.st.k) && m.st.left<=14 && !m.s.autoRenew; }).length; }
+function leftText(st){
+  if(st.k==="future") return `เริ่มในอีก ${st.startsIn} วัน`;
+  if(st.k==="expired") return `หมดอายุแล้ว ${-st.left} วัน`;
+  if(st.left===0) return "หมดอายุวันนี้";
+  return "";
+}
+function subCard(service){
+  const sv=SUB_SERVICES[service]; const c=subCurrent(service); const m=c.main;
+  const band=`<div class="band ${service}"><span>${esc(sv.label)}</span></div>`;
+  if(!m) return `<div class="subcard">${band}<div class="in"><div class="sub">ยังไม่ได้บันทึกการสมัคร</div><div class="tools"><button class="btn small primary" data-subnew="${service}">+ บันทึกการซื้อ</button></div></div></div>`;
+  const s=m.s, st=m.st; const cls=st.k==="expired"?"bad":st.k==="future"?"ok":st.k;
+  const pct=st.total?Math.max(0,Math.min(100,st.left/st.total*100)):0;
+  const ext = c.coverEnd && c.coverEnd>st.end ? `<div class="hint">มีแพ็กเกจต่อคิวไว้แล้ว ใช้ได้ถึง ${fmtDate(c.coverEnd)} (อีก ${daysBetween(today(),c.coverEnd)} วัน)</div>` : "";
+  return `<div class="subcard">${band}<div class="in">
+    <div class="plan">${esc(subPlanLabel(s))}</div>
+    ${st.k==="expired"||st.k==="future"||st.left===0
+      ? `<div class="left ${cls}"><span class="pill ${st.k==="future"?"ok":"bad"}">${leftText(st)}</span></div>`
+      : `<div class="left ${cls}"><span class="n">${st.left}</span><span>วันที่เหลือ</span></div><div class="meter ${cls}"><i style="width:${pct.toFixed(1)}%"></i></div>`}
+    <div class="sub">${st.k==="expired"?"หมดอายุ":s.autoRenew?"ต่ออายุรอบถัดไป":"หมดอายุ"} <b style="color:var(--ink)">${fmtDate(st.end)}</b> · ${DUR_LABEL[s.months]||s.months+" เดือน"}${s.autoRenew?" · ต่ออายุอัตโนมัติ":""}</div>
+    ${ext}
+    ${shareSummaryHTML(s, st.end)}
+    <div class="tools"><button class="btn small" data-subedit="${esc(s.id)}">แก้ไข</button><button class="btn small primary" data-subrenew="${esc(s.id)}">ต่ออายุ / ซื้อเพิ่ม</button></div>
+  </div></div>`;
+}
+function priceTable(service){
+  const sv=SUB_SERVICES[service];
+  return `<div class="panel"><h3 class="st" style="margin:0;display:flex;gap:8px;align-items:center"><span class="ptag ${service}">${service==="psn"?"PS":"Switch"}</span>${esc(sv.label)}</h3>
+    <div class="tblwrap"><table class="prices"><thead><tr><th>แพ็กเกจ</th><th>1 เดือน</th><th>3 เดือน</th><th>12 เดือน</th></tr></thead><tbody>
+    ${sv.plans.map(p=>`<tr><td><b>${esc(p.label)}</b><span class="per">${esc(p.desc)}</span></td>${[1,3,12].map(n=>p.prices[n]!=null?`<td><button type="button" class="pb" data-subpick="${service}|${p.id}|${n}" title="บันทึกว่าซื้อแพ็กเกจนี้">${baht(p.prices[n])}</button><span class="per">≈ ${baht(Math.round(p.prices[n]/n))}/ด.</span></td>`:`<td class="sub">—</td>`).join("")}</tr>`).join("")}
+    </tbody></table></div>
+    <div class="src">${esc(sv.src)} · ตรวจราคาเมื่อ ${fmtDate(SUB_CHECKED)} ราคาอาจเปลี่ยนหรือมีโปรลดราคา แก้ราคาที่จ่ายจริงได้ตอนบันทึก</div>
+  </div>`;
+}
+function viewSubs(){
+  const hist=[...S.subs].sort((a,b)=>(b.start||"").localeCompare(a.start||""));
+  const yr=String(new Date().getFullYear());
+  const spentYr=S.subs.filter(s=>(s.start||"").startsWith(yr)).reduce((a,s)=>a+myCost(s),0);
+  const spentAll=S.subs.reduce((a,s)=>a+myCost(s),0);
+  return `<section class="view">
+    <h2 class="vt">สมาชิก PS Plus / Nintendo</h2>
+    <div class="subcards">${subCard("psn")}${subCard("nso")}</div>
+    ${S.subs.length?`<div class="statline"><span>ค่าสมาชิกปี ${yr} (ส่วนของฉัน) <b class="mono">${baht(spentYr)}</b></span><span>รวมทั้งหมด <b class="mono">${baht(spentAll)}</b></span><span><b>${S.subs.length}</b> รายการ</span></div>`:""}
+    <h3 class="st">แพ็กเกจและราคา (ไทย)</h3>
+    <div class="sub" style="margin-top:-6px">แตะราคาเพื่อบันทึกว่าซื้อแพ็กเกจนั้น</div>
+    <div class="panels">${priceTable("psn")}${priceTable("nso")}</div>
+    <h3 class="st">ประวัติการซื้อ</h3>
+    ${hist.length?`<div class="list">${hist.map(s=>{ const st=subStatus(s);
+      const pill = st.k==="expired"?`<span class="pill soft">หมดแล้ว</span>`:st.k==="future"?`<span class="pill soft">รอเริ่ม</span>`:`<span class="pill ${st.k==="ok"?"ok":st.k==="warn"?"warn":"bad"}">เหลือ ${st.left} วัน</span>`;
+      return `<div class="row click" data-subedit="${esc(s.id)}"><span class="ptag ${esc(s.service)}">${s.service==="psn"?"PS":"NS"}</span><div class="grow"><div class="t">${esc(subPlanLabel(s))} · ${DUR_LABEL[s.months]||esc(s.months)+" เดือน"}</div><div class="s">${fmtDate(s.start)} → ${fmtDate(subEnd(s))}${s.autoRenew?" · ต่ออัตโนมัติ":""}${s.share==="member"?` · อยู่กับ ${esc(s.owner||"?")} จ่าย <span class="mono">${baht(s.myShare||0)}</span>`:s.price!==""&&s.price!=null?` · <span class="mono">${baht(s.price)}</span>`:""}${shareMembers(s).length?` · แชร์ ${shareMembers(s).length} คน (${esc(shareMembers(s).map(m=>m.name).filter(Boolean).join(", "))})`:""}</div></div>${pill}</div>`; }).join("")}</div>`
+    :`<div class="empty"><b>ยังไม่มีประวัติการซื้อ</b><span>กด “+ บันทึกการซื้อ” หรือแตะราคาในตารางด้านบน แล้วใส่วันที่กดซื้อ ระบบจะคำนวณวันหมดอายุให้</span></div>`}
+  </section>`;
+}
+function openSubSheet(s){
+  const base={ id:"s"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), service:"psn", plan:"essential", months:12, start:today(), price:"", autoRenew:false, notes:"", share:"none", members:[], owner:"", myShare:"" };
+  const draft=JSON.parse(JSON.stringify(Object.assign(base, s||{})));
+  if(!Array.isArray(draft.members)) draft.members=[];
+  if(draft.price===""||draft.price==null){ const p=subPlan(draft); if(p && p.prices[draft.months]!=null) draft.price=p.prices[draft.months]; }
+  S.subSheet={ draft, isNew:!S.subs.some(x=>x.id===draft.id), confirmDelete:false };
+  S.sheet=null; S.detail=null; renderSubSheet();
+}
+function fixSubDraft(d, keepPrice){
+  const sv=SUB_SERVICES[d.service]; let p=sv.plans.find(x=>x.id===d.plan); if(!p){ p=sv.plans[0]; d.plan=p.id; }
+  if(p.prices[d.months]==null) d.months=+Object.keys(p.prices).sort((a,b)=>b-a)[0];
+  if(!keepPrice) d.price=p.prices[d.months];
+}
+function pullSubForm(){
+  const sh=S.subSheet; if(!sh) return; const d=sh.draft;
+  const st=$("#sf-start"); if(st) d.start=st.value;
+  const pr=$("#sf-price"); if(pr) d.price = pr.value===""?"":Number(pr.value);
+  const no=$("#sf-notes"); if(no) d.notes=no.value;
+  const ow=$("#sf-owner"); if(ow) d.owner=ow.value.trim();
+  const mys=$("#sf-myshare"); if(mys) d.myShare = mys.value===""?"":Number(mys.value);
+  (d.members||[]).forEach((m,i)=>{ const n=$("#sm-name-"+i), a=$("#sm-amt-"+i); if(n) m.name=n.value.trim(); if(a) m.amount = a.value===""?"":Number(a.value); });
+}
+function shareFormHTML(d){
+  const key=d.service+"|"+d.plan; const max=SHARE_MAX[key];
+  const hint = d.service==="psn" ? "PS Plus ไม่มีแพ็กเกจ Family แต่แชร์ได้ผ่านการตั้ง PS5 หลัก (Console Sharing) ให้บัญชีอื่นบนเครื่องเดียวกัน"
+    : max ? `แพ็กเกจ Family ใช้ได้สูงสุด 8 บัญชี (แชร์ให้คนอื่นได้อีก ${max} คน)` : "แพ็กเกจ Individual ใช้ได้บัญชีเดียว ถ้าจะแชร์ให้เลือกแพ็กเกจ Family";
+  const seg=`<div class="seg segwrap" role="group">${[["none","ไม่ได้แชร์"],["host","ฉันซื้อ แชร์ให้คนอื่น"],["member","อยู่ในแพ็กเกจของคนอื่น"]].map(([v,l])=>`<button type="button" data-subseg="share" data-v="${v}" aria-pressed="${(d.share||"none")===v}">${l}</button>`).join("")}</div>`;
+  let body="";
+  if(d.share==="host"){
+    const ms=d.members||[]; const back=ms.reduce((a,m)=>a+(+m.amount||0),0);
+    body=`<div class="box"><h4>คนที่แชร์ด้วย <span class="pill soft">${ms.length}${max?` / ${max}`:""} คน</span></h4>
+      ${ms.map((m,i)=>`<div class="mrow"><input id="sm-name-${i}" value="${esc(m.name)}" placeholder="ชื่อ" aria-label="ชื่อคนที่ ${i+1}"><input id="sm-amt-${i}" type="number" inputmode="decimal" min="0" step="any" value="${esc(m.amount)}" placeholder="บาท" aria-label="ส่วนแบ่งคนที่ ${i+1}"><button type="button" class="btn small ${m.paid?"primary":""}" data-subpaid="${i}">${m.paid?"จ่ายแล้ว":"ยังไม่จ่าย"}</button><button type="button" class="btn small ghost" data-subrm="${i}" aria-label="ลบ">✕</button></div>`).join("")}
+      <div class="tools"><button type="button" class="btn small" data-act="subAddMember" ${max&&ms.length>=max?"disabled":""}>+ เพิ่มคน</button>${ms.length?`<button type="button" class="btn small ghost" data-act="subSplit">หารเท่ากัน (${ms.length+1} คนรวมฉัน)</button>`:""}</div>
+      ${ms.length?`<div class="hint">ได้คืนรวม <b class="mono">${baht(back)}</b> · ฉันจ่ายสุทธิ <b class="mono">${baht(Math.max(0,(+d.price||0)-back))}</b> · ทุกคนหมดอายุพร้อมกันวันที่ ${fmtDate(subEnd(d))||"—"}</div>`:""}
+    </div>`;
+  } else if(d.share==="member"){
+    body=`<div class="two stack"><div class="field"><label for="sf-owner">เจ้าของแพ็กเกจ</label><input id="sf-owner" value="${esc(d.owner)}" placeholder="ชื่อคนที่ซื้อ"></div>
+      <div class="field"><label for="sf-myshare">ส่วนที่ฉันจ่าย (บาท)</label><input id="sf-myshare" type="number" inputmode="decimal" min="0" step="any" value="${esc(d.myShare)}" placeholder="0"></div></div>
+      <div class="hint">“ราคาที่จ่าย” ด้านบนคือราคาเต็มของแพ็กเกจ ยอดใช้จ่ายของฉันจะนับจากช่องนี้แทน</div>`;
+  }
+  return `<div class="field"><span class="lab">การแชร์</span>${seg}<div class="hint">${hint}</div></div>${body}`;
+}
+function subCalcHTML(d){
+  const end=subEnd(d); if(!end) return `<div class="calc">ใส่วันที่ซื้อเพื่อดูวันหมดอายุ</div>`;
+  const left=daysBetween(today(),end);
+  return `<div class="calc">หมดอายุ <b>${fmtDate(end,{weekday:"short",day:"numeric",month:"long",year:"numeric"})}</b><br><span class="sub">${left>=0?`เหลืออีก ${left} วัน`:`หมดไปแล้ว ${-left} วัน`}${SUB_SERVICES[d.service].unit==="day"?` · นับ ${+d.months===12?365:d.months*30} วันตามเงื่อนไข Nintendo`:""}</span></div>`;
+}
+function renderSubSheet(){
+  const sh=S.subSheet; if(!sh) return; const d=sh.draft; const sv=SUB_SERVICES[d.service]; const p=subPlan(d)||sv.plans[0];
+  const prev=S.subs.filter(x=>x.service===d.service && x.id!==d.id).map(x=>subEnd(x)).filter(Boolean).sort().pop()||"";
+  document.body.style.overflow="hidden";
+  $("#sheetRoot").innerHTML=`<div class="scrim" data-scrim>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="subTitle">
+    <header><h3 id="subTitle">${sh.isNew?"บันทึกการซื้อสมาชิก":"แก้ไขการสมัคร"}</h3><button class="btn ghost small" data-act="subClose" aria-label="ปิด">ปิด</button></header>
+    <div class="content">
+      <div class="field"><span class="lab">บริการ</span><div class="seg" role="group">${[["psn","PS Plus"],["nso","Switch Online"]].map(([v,l])=>`<button type="button" data-subseg="service" data-v="${v}" aria-pressed="${d.service===v}">${l}</button>`).join("")}</div></div>
+      <div class="field"><span class="lab">แพ็กเกจ</span><div class="seg segwrap" role="group">${sv.plans.map(x=>`<button type="button" data-subseg="plan" data-v="${x.id}" aria-pressed="${d.plan===x.id}">${esc(x.label)}</button>`).join("")}</div><div class="hint">${esc(p.desc)}</div></div>
+      <div class="field"><span class="lab">ระยะเวลา</span><div class="seg" role="group">${[1,3,12].map(n=>`<button type="button" data-subseg="months" data-v="${n}" aria-pressed="${+d.months===n}" ${p.prices[n]==null?"disabled":""}>${DUR_LABEL[n]}${p.prices[n]!=null?`<span class="per" style="display:block;font-size:11px;font-weight:400;color:inherit;opacity:.75">${baht(p.prices[n])}</span>`:""}</button>`).join("")}</div>${Object.keys(p.prices).length===1?`<div class="hint">แพ็กเกจนี้มีแบบ 12 เดือนเท่านั้น</div>`:""}</div>
+      <div class="two stack">
+        <div class="field"><label for="sf-start">วันที่กดซื้อ / เริ่มใช้</label><input id="sf-start" type="date" value="${esc(d.start)}">
+          ${prev&&prev>=today()?`<button type="button" class="btn small ghost" data-act="subChain" data-v="${prev}" style="align-self:flex-start">ต่อจากของเดิม (${fmtDate(prev)})</button>`:""}</div>
+        <div class="field"><label for="sf-price">ราคาที่จ่าย (บาท)</label><input id="sf-price" type="number" inputmode="decimal" min="0" step="any" value="${esc(d.price)}"></div>
+      </div>
+      <div id="subCalc">${subCalcHTML(d)}</div>
+      <div class="field"><span class="lab">ต่ออายุอัตโนมัติ</span><div class="seg" role="group"><button type="button" data-subseg="autoRenew" data-v="0" aria-pressed="${!d.autoRenew}">ไม่ได้ตั้ง</button><button type="button" data-subseg="autoRenew" data-v="1" aria-pressed="${!!d.autoRenew}">ตั้งไว้</button></div><div class="hint">ถ้าตั้งไว้ แอปจะนับรอบถัดไปให้เองหลังวันหมดอายุ</div></div>
+      <div id="shareBox">${shareFormHTML(d)}</div>
+      <div class="field"><label for="sf-notes">โน้ต</label><textarea id="sf-notes" placeholder="เช่น ซื้อตอนลดราคา, บัญชีไหน">${esc(d.notes)}</textarea></div>
+    </div>
+    <footer>${sh.confirmDelete?`<span class="confirm-q">ลบรายการนี้ถาวร?</span><span class="sp"></span><button class="btn ghost" data-act="subNoDelete">ไม่ลบ</button><button class="btn danger solid" data-act="subReallyDelete">ยืนยันลบ</button>`
+      :`${!sh.isNew?`<button class="btn danger" data-act="subDelete">ลบ</button>`:""}<span class="sp"></span><button class="btn ghost" data-act="subClose">ยกเลิก</button><button class="btn primary" data-act="subSave">บันทึก</button>`}</footer>
+  </div></div>`;
+}
+async function subClick(t){
+  const ds=t.dataset;
+  if(ds.subnew){ openSubSheet({service:ds.subnew, plan:SUB_SERVICES[ds.subnew].plans[0].id, months:12}); return true; }
+  if(ds.subpick){ const [service,plan,m]=ds.subpick.split("|"); openSubSheet({service,plan,months:+m}); return true; }
+  if(ds.subedit){ const s=S.subs.find(x=>x.id===ds.subedit); if(s) openSubSheet(s); return true; }
+  if(ds.subrenew){ const s=S.subs.find(x=>x.id===ds.subrenew); if(s){ const st=subStatus(s); const c=subCurrent(s.service); const from=c.coverEnd&&c.coverEnd>=today()?c.coverEnd:today();
+      openSubSheet({service:s.service, plan:s.plan, months:s.months, autoRenew:false, start: st.k==="expired"?today():from,
+        share:s.share||"none", owner:s.owner||"", myShare:s.myShare??"", members:(s.members||[]).map(m=>({name:m.name||"",amount:m.amount??"",paid:false}))}); } return true; }
+  const sh=S.subSheet; if(!sh) return false; const d=sh.draft;
+  if(ds.subseg){ pullSubForm();
+    if(ds.subseg==="service"){ d.service=ds.v; d.plan=SUB_SERVICES[ds.v].plans[0].id; fixSubDraft(d); }
+    else if(ds.subseg==="plan"){ d.plan=ds.v; fixSubDraft(d); }
+    else if(ds.subseg==="months"){ d.months=+ds.v; fixSubDraft(d); }
+    else if(ds.subseg==="autoRenew"){ d.autoRenew=ds.v==="1"; }
+    else if(ds.subseg==="share"){ d.share=ds.v; if(ds.v==="host" && !(d.members||[]).length) d.members=[{name:"",amount:"",paid:false}]; }
+    renderSubSheet(); return true; }
+  if(ds.subpaid!=null){ pullSubForm(); const m=d.members[+ds.subpaid]; if(m) m.paid=!m.paid; renderSubSheet(); return true; }
+  if(ds.subrm!=null){ pullSubForm(); d.members.splice(+ds.subrm,1); renderSubSheet(); return true; }
+  switch(ds.act){
+    case "subAddMember": pullSubForm(); d.members=[...(d.members||[]),{name:"",amount:"",paid:false}]; renderSubSheet(); setTimeout(()=>$("#sm-name-"+(d.members.length-1))?.focus(),30); return true;
+    case "subSplit": pullSubForm(); { const n=d.members.length+1; const each=Math.round((+d.price||0)/n*100)/100; d.members.forEach(m=>m.amount=each); } renderSubSheet(); return true;
+    case "subClose": closeSheet(); return true;
+    case "subChain": pullSubForm(); d.start=ds.v; renderSubSheet(); return true;
+    case "subSave": pullSubForm();
+      if(d.share!=="host") d.members=[]; else d.members=(d.members||[]).filter(m=>m.name||m.amount);
+      if(d.share!=="member"){ d.owner=""; d.myShare=""; }
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d.start||"")){ toast("ใส่วันที่ซื้อก่อน"); $("#sf-start")?.focus(); return true; }
+      t.disabled=true; try{ await saveSub(d); closeSheet(); toast(`บันทึกแล้ว หมดอายุ ${fmtDate(subEnd(d))}`); }catch{ t.disabled=false; } return true;
+    case "subDelete": pullSubForm(); sh.confirmDelete=true; renderSubSheet(); return true;
+    case "subNoDelete": sh.confirmDelete=false; renderSubSheet(); return true;
+    case "subReallyDelete": t.disabled=true; try{ await deleteSub(d.id); closeSheet(); toast("ลบแล้ว"); }catch{ t.disabled=false; toast("ลบไม่สำเร็จ ลองอีกครั้ง"); } return true;
+  }
+  return false;
+}
+
+/* ---------- rentals (kept apart from purchases) ---------- */
+const RENT_LS="gameslib.rentals.v1";
+function rentLsLoad(){ try{ return JSON.parse(localStorage.getItem(RENT_LS)||"[]"); }catch{ return []; } }
+function rentLsSave(){ try{ localStorage.setItem(RENT_LS, JSON.stringify(S.rentals)); }catch{} }
+async function saveRent(r){
+  r.updatedAt=new Date().toISOString(); if(!r.createdAt) r.createdAt=r.updatedAt;
+  const { id, ...data } = r;
+  if(S.mode==="cloud"){
+    try{ await DB.collection("rentals").doc(id).set(JSON.parse(JSON.stringify(data))); }
+    catch(e){ toast("บันทึกไม่สำเร็จ ลองอีกครั้ง"); throw e; }
+  } else { const i=S.rentals.findIndex(x=>x.id===id); if(i>=0) S.rentals[i]=r; else S.rentals.push(r); rentLsSave(); render(); }
+}
+async function deleteRent(id){
+  if(S.mode==="cloud"){ await DB.collection("rentals").doc(id).delete(); }
+  else { S.rentals=S.rentals.filter(x=>x.id!==id); rentLsSave(); render(); }
+}
+function libTabs(cur){
+  const late=S.rentals.filter(r=>!r.returned && r.due && r.due<today()).length;
+  const out=S.rentals.filter(r=>!r.returned).length;
+  const lent=owned().filter(currentLoan).length;
+  return `<div class="ptabs" role="tablist"><a href="#library" role="tab" aria-selected="${cur==="library"}">เกมของฉัน</a><a href="#rentals" role="tab" aria-selected="${cur==="rentals"}">เช่าเกม${out?` <span${late?' style="background:var(--danger);color:#fff"':""}>${out}</span>`:""}</a><a href="#loans" role="tab" aria-selected="${cur==="loans"}">การยืม${lent?` <span>${lent}</span>`:""}</a></div>`;
+}
+/* Release list: months folded by the viewer, remembered in this browser */
+function relFoldSet(){ if(!S.relFold){ try{ S.relFold=new Set(JSON.parse(localStorage.getItem("gameslib.relfold")||"[]")); }catch{ S.relFold=new Set(); } } return S.relFold; }
+function relFolded(when,k){ return relFoldSet().has(when+":"+k); }
+function relFoldSave(){ try{ localStorage.setItem("gameslib.relfold",JSON.stringify([...S.relFold])); }catch{} }
+/* "เช่า" starts a new rental; while one is still out it opens that rental instead, and after it is returned the game can be rented again */
+function rentBtn(title,attr,val,cls){
+  const n=norm(title); const cur=S.rentals.find(r=>!r.returned && norm(r.title)===n);
+  return cur?`<button class="${cls}" data-rentdetail="${esc(cur.id)}" data-rentbtn="1">เช่าอยู่</button>`:`<button class="${cls}" data-${attr}="${esc(val)}" data-rentbtn="1">เช่า</button>`;
+}
+function rentTag(title){
+  const n=norm(title); const rs=S.rentals.filter(r=>norm(r.title)===n); if(!rs.length) return "";
+  return rs.some(r=>!r.returned)?`<span class="pill warn">เช่าอยู่</span>`:`<span class="pill soft">เคยเช่า ${rs.length} ครั้ง</span>`;
+}
+function rentCover(r){ return r.coverId || coverOf(r.title,{}) || ""; }
+function rentDays(r){ const end=r.returned?(r.returnedOn||r.due):(r.due||today()); return r.start&&end?Math.max(1,daysBetween(r.start,end)):0; }
+function rentStatus(r){
+  if(r.returned) return {k:"back"};
+  const t=today();
+  if(r.start && r.start>t) return {k:"future", n:daysBetween(t,r.start)};
+  if(!r.due) return {k:"open", n:r.start?daysBetween(r.start,t):0};
+  const left=daysBetween(t,r.due);
+  return left<0?{k:"late",n:-left}:{k:left<=1?"warn":"ok",n:left};
+}
+function rentPill(r){
+  const st=rentStatus(r);
+  if(st.k==="back") return `<span class="pill soft">คืนแล้ว</span>`;
+  if(st.k==="future") return `<span class="pill soft">เริ่มอีก ${st.n} วัน</span>`;
+  if(st.k==="open") return `<span class="pill warn">เช่ามา ${st.n} วัน</span>`;
+  if(st.k==="late") return `<span class="pill bad">เกินกำหนด ${st.n} วัน</span>`;
+  return `<span class="pill ${st.k}">${st.n===0?"คืนวันนี้":`เหลือ ${st.n} วัน`}</span>`;
+}
+function rentSpent(list){ return list.reduce((a,r)=>a+(+r.fee||0),0); }
+function rentSummarySection(){
+  if(!S.rentals.length) return `<div class="empty"><b>ยังไม่มีค่าเช่าให้สรุป</b><span>บันทึกการเช่าได้ที่ คลังเกม → เช่าเกม</span><a class="btn" href="#rentals">เปิดหน้าเช่าเกม</a></div>`;
+  const yr=String(new Date().getFullYear());
+  const list=[...S.rentals].sort((a,b)=>(b.start||"").localeCompare(a.start||""));
+  const total=rentSpent(list), yrTotal=rentSpent(list.filter(r=>(r.start||"").startsWith(yr)));
+  const out=list.filter(r=>!r.returned).length;
+  const byYear=groupSum(list.map(r=>({price:r.fee,y:(r.start||"").slice(0,4)||"ไม่ระบุ"})),r=>r.y).sort((a,b)=>b.k.localeCompare(a.k)).map(r=>({...r,label:r.k}));
+  const byPlat=groupSum(list.map(r=>({price:r.fee,platform:r.platform||"PS5"})),r=>r.platform).sort((a,b)=>PLAT_ORDER.indexOf(a.k)-PLAT_ORDER.indexOf(b.k)).map(r=>({...r,label:platLabel(r.k)}));
+  const gm={}; list.forEach(r=>{ const gs=splitGenres(gameGenre({title:r.title,platform:r.platform||"PS5",genre:r.genre})); (gs.length?gs:["ไม่ระบุแนว"]).forEach(x=>{ const k=genreKey(x); if(!gm[k]) gm[k]={k,label:esc(x),v:0,n:0}; gm[k].v+=(+r.fee||0)/(gs.length||1); gm[k].n++; }); });
+  const byGenre=Object.values(gm).sort((a,b)=>b.v-a.v).slice(0,10);
+  const byShop=groupSum(list.map(r=>({price:r.fee,s:r.shop||"ไม่ระบุร้าน"})),r=>r.s).sort((a,b)=>b.v-a.v).slice(0,8).map(r=>({...r,label:esc(r.k)}));
+  return `<div class="kpis">
+      <div class="kpi hero"><div class="eyebrow">ค่าเช่าทั้งหมด</div><div class="v">${baht(total)}</div><div class="sub" style="color:inherit;opacity:.75">${list.length} ครั้ง · เฉลี่ย ${baht(total/list.length)} ต่อครั้ง</div></div>
+      <div class="kpi"><div class="eyebrow">ปี ${yr}</div><div class="v">${baht(yrTotal)}</div></div>
+      <div class="kpi"><div class="eyebrow">เช่าอยู่</div><div class="v">${out}</div></div>
+      <div class="kpi"><div class="eyebrow">คืนแล้ว</div><div class="v">${list.length-out}</div></div>
+    </div>
+    <div class="panels">
+      <div class="panel"><button type="button" class="rlt" data-act="rentListToggle" aria-expanded="${!!S.rentListOpen}"><h3 class="st" style="margin:0">รายการเช่าทั้งหมด <small class="sub" style="font-weight:600">${list.length} รายการ</small></h3><span class="rlt-b">${S.rentListOpen?"ซ่อน":"แสดง"}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span></button>
+        ${!S.rentListOpen?"":`<div class="list" style="box-shadow:none;margin:0 -14px">${list.map(r=>`<div class="row click" data-rentdetail="${esc(r.id)}">${thumbHTML(r.title,r.platform||"PS5",rentCover(r),"rthumb")}<div class="grow"><div class="t">${esc(r.title)}</div><div class="s">${fmtDate(r.start)||"?"} → ${fmtDate(r.returned?r.returnedOn:r.due)||"?"}${r.returned?"":" · ยังไม่คืน"}${r.shop?` · ${esc(r.shop)}`:""}</div></div><span class="mono" style="font-weight:600">${baht(r.fee)}</span></div>`).join("")}</div>`}
+      </div>
+      <div class="panel"><h3 class="st" style="margin:0">ตามเครื่อง</h3>${bars(byPlat,r=>r.k)}</div>
+      <div class="panel"><h3 class="st" style="margin:0">ตามปีที่เช่า</h3>${bars(byYear)}</div>
+      <div class="panel"><h3 class="st" style="margin:0">ตามแนวเกม</h3>${bars(byGenre)}<div class="hint">เกมที่มีหลายแนว ค่าเช่าจะแบ่งเท่ากันให้แต่ละแนว</div></div>
+      ${byShop.length>1||(byShop[0]&&byShop[0].k!=="ไม่ระบุร้าน")?`<div class="panel"><h3 class="st" style="margin:0">ตามร้านที่เช่า</h3>${bars(byShop)}</div>`:""}
+    </div>`;
+}
+function rentRow(r){
+  const plat=r.platform?platTag(r.platform):"";
+  const bits=[];
+  if(r.returned) bits.push(`${fmtDate(r.start)||"?"} → คืน ${fmtDate(r.returnedOn)||"?"}`);
+  else bits.push(`เช่า ${fmtDate(r.start)||"?"}${r.due?` · กำหนดคืน ${fmtDate(r.due)}`:""}`);
+  const d=rentDays(r); if(d) bits.push(`${d} วัน`);
+  if(r.shop) bits.push(esc(r.shop));
+  if(r.fee!==""&&r.fee!=null) bits.push(`<span class="mono">${baht(r.fee)}</span>`);
+  return `<div class="row click" data-rentdetail="${esc(r.id)}">${thumbHTML(r.title,r.platform||"PS5",rentCover(r),"rthumb")}<div class="grow"><div class="t">${esc(r.title)}</div><div class="s lmeta">${plat}${rentPill(r)}<span>${bits.join(" · ")}</span></div></div>${r.returned?"":`<button class="btn small" data-rentback="${esc(r.id)}">คืนแล้ว</button>`}</div>`;
+}
+function viewRentals(){
+  const yr=String(new Date().getFullYear());
+  const active=S.rentals.filter(r=>!r.returned).sort((a,b)=>(a.due||"9999").localeCompare(b.due||"9999"));
+  const hist=S.rentals.filter(r=>r.returned).sort((a,b)=>(b.returnedOn||b.start||"").localeCompare(a.returnedOn||a.start||""));
+  const total=rentSpent(S.rentals);
+  const yrTotal=rentSpent(S.rentals.filter(r=>(r.start||"").startsWith(yr)));
+  const counts={}; S.rentals.forEach(r=>{ const k=norm(r.title); counts[k]=counts[k]||{t:r.title,n:0,v:0}; counts[k].n++; counts[k].v+=(+r.fee||0); });
+  const repeat=Object.values(counts).filter(x=>x.n>1).sort((a,b)=>b.n-a.n).slice(0,5);
+  return `<section class="view">
+    ${libTabs("rentals")}
+    <h2 class="vt">เช่าเกม</h2>
+    ${S.rentals.length?`<div class="statline"><span>เช่าอยู่ <b>${active.length}</b> เกม</span><span>คืนแล้ว <b>${hist.length}</b> ครั้ง</span><a href="#summary" data-sumlink="rent">ดูค่าเช่ารวมในหน้าสรุป</a></div>`:""}
+    <div class="tools"><button class="btn primary" data-act="rentNew">+ บันทึกการเช่า</button></div>
+    <h3 class="st">กำลังเช่าอยู่</h3>
+    ${active.length?`<div class="list">${active.map(rentRow).join("")}</div>`
+      :`<div class="empty"><b>ไม่มีเกมที่เช่าอยู่</b><span>กด “+ บันทึกการเช่า” แล้วใส่ชื่อเกม วันเช่า วันคืน และค่าเช่า</span></div>`}
+    <h3 class="st">ประวัติการเช่า</h3>
+    ${hist.length?`<div class="list">${hist.map(rentRow).join("")}</div>`:`<div class="sub">ยังไม่มีเกมที่คืนแล้ว พอกด “คืนแล้ว” รายการจะย้ายมาเก็บไว้ที่นี่</div>`}
+    ${repeat.length?`<h3 class="st">เช่าซ้ำบ่อย</h3><div class="list">${repeat.map(x=>`<div class="row"><div class="grow"><div class="t">${esc(x.t)}</div><div class="s">เช่า ${x.n} ครั้ง · รวม <span class="mono">${baht(x.v)}</span></div></div></div>`).join("")}</div>`:""}
+  </section>`;
+}
+function openRentSheet(r){
+  const base={ id:"r"+Date.now().toString(36)+Math.random().toString(36).slice(2,6), title:"", platform:"PS5", shop:"", start:today(), due:addDaysISO(today(),7), fee:"", returned:false, returnedOn:"", notes:"" };
+  const draft=JSON.parse(JSON.stringify(Object.assign(base, r||{})));
+  S.rentSheet={ draft, isNew:!S.rentals.some(x=>x.id===draft.id), confirmDelete:false };
+  S.sheet=null; S.detail=null; S.subSheet=null; renderRentSheet();
+}
+function pullRentForm(){
+  const sh=S.rentSheet; if(!sh) return; const d=sh.draft;
+  const v=id=>{ const el=$("#"+id); return el?el.value:null; };
+  if(v("rf-title")!=null) d.title=v("rf-title");
+  if(v("rf-shop")!=null) d.shop=v("rf-shop");
+  if(v("rf-start")!=null) d.start=v("rf-start");
+  if(v("rf-due")!=null) d.due=v("rf-due");
+  if(v("rf-back")!=null) d.returnedOn=v("rf-back");
+  if(v("rf-fee")!=null) d.fee=v("rf-fee")===""?"":Number(v("rf-fee"));
+  if(v("rf-notes")!=null) d.notes=v("rf-notes");
+}
+function rentCalcHTML(d){
+  if(!d.start) return `<div class="calc">ใส่วันเช่าก่อน</div>`;
+  const end=d.returned?(d.returnedOn||d.due):d.due;
+  if(!end) return `<div class="calc">ยังไม่ได้กำหนดวันคืน</div>`;
+  const n=daysBetween(d.start,end);
+  if(n<0) return `<div class="calc">วันคืนอยู่ก่อนวันเช่า ตรวจวันที่อีกครั้ง</div>`;
+  const per=(+d.fee>0&&n>0)?` · ตกวันละ <span class="mono">${baht(d.fee/n)}</span>`:"";
+  return `<div class="calc">เช่า <b>${n||1} วัน</b>${per}${!d.returned&&d.due?`<br><span class="sub">${rentStatus(d).k==="late"?`เกินกำหนดมา ${-daysBetween(today(),d.due)} วัน`:`ต้องคืนภายใน ${fmtDate(d.due,{weekday:"short",day:"numeric",month:"long"})}`}</span>`:""}</div>`;
+}
+function renderRentSheet(){
+  const sh=S.rentSheet; if(!sh) return; const d=sh.draft;
+  const shops=[...new Set(S.rentals.map(r=>r.shop).filter(Boolean))];
+  document.body.style.overflow="hidden";
+  $("#sheetRoot").innerHTML=`<div class="scrim" data-scrim>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="rentTitle">
+    <header><h3 id="rentTitle">${sh.isNew?"บันทึกการเช่าเกม":"แก้ไขการเช่า"}</h3><button class="btn ghost small" data-act="rentClose" aria-label="ปิด">ปิด</button></header>
+    <div class="content">
+      <div class="field"><label for="rf-title">ชื่อเกม</label><input id="rf-title" list="dl-rent" autocomplete="off" value="${esc(d.title)}" placeholder="เช่น Mario Kart World"><datalist id="dl-rent">${titleOptions(d.title,d.platform)}</datalist></div>
+      <div class="field"><span class="lab">เครื่อง</span><div class="seg" role="group">${PLAT_ORDER.map(p=>`<button type="button" data-rentseg="platform" data-v="${p}" aria-pressed="${d.platform===p}">${platLabel(p)}</button>`).join("")}</div></div>
+      <div class="field"><label for="rf-shop">เช่าจาก (ร้าน / คน)</label><input id="rf-shop" list="dl-rentshop" autocomplete="off" value="${esc(d.shop)}" placeholder="ไม่ใส่ก็ได้"><datalist id="dl-rentshop">${shops.map(x=>`<option value="${esc(x)}">`).join("")}</datalist></div>
+      <div class="two stack">
+        <div class="field"><label for="rf-start">วันเช่า</label><input id="rf-start" type="date" value="${esc(d.start)}"></div>
+        <div class="field"><label for="rf-due">วันคืน (กำหนด)</label><input id="rf-due" type="date" value="${esc(d.due)}">
+          <div class="rentq">${[3,7,14,30].map(n=>`<button type="button" class="btn small ghost" data-rentdue="${n}">${n} วัน</button>`).join("")}</div></div>
+      </div>
+      <div class="field"><label for="rf-fee">ค่าเช่า (บาท)</label><input id="rf-fee" type="number" inputmode="decimal" min="0" step="any" value="${esc(d.fee)}" placeholder="0"></div>
+      <div class="field"><span class="lab">คืนแล้วหรือยัง</span><div class="seg" role="group"><button type="button" data-rentseg="returned" data-v="0" aria-pressed="${!d.returned}">ยังไม่คืน</button><button type="button" data-rentseg="returned" data-v="1" aria-pressed="${!!d.returned}">คืนแล้ว</button></div></div>
+      ${d.returned?`<div class="field"><label for="rf-back">วันที่คืนจริง</label><input id="rf-back" type="date" value="${esc(d.returnedOn)}"></div>`:""}
+      <div id="rentCalc">${rentCalcHTML(d)}</div>
+      <div class="field"><label for="rf-notes">โน้ต</label><textarea id="rf-notes" placeholder="เช่น มัดจำ 500 ได้คืนแล้ว, เล่นจบหรือยัง">${esc(d.notes)}</textarea></div>
+    </div>
+    <footer>${sh.confirmDelete?`<span class="confirm-q">ลบรายการเช่านี้ถาวร?</span><span class="sp"></span><button class="btn ghost" data-act="rentNoDelete">ไม่ลบ</button><button class="btn danger solid" data-act="rentReallyDelete">ยืนยันลบ</button>`
+      :`${!sh.isNew?`<button class="btn danger" data-act="rentDelete">ลบ</button>`:""}<span class="sp"></span><button class="btn ghost" data-act="rentClose">ยกเลิก</button><button class="btn primary" data-act="rentSave">บันทึก</button>`}</footer>
+  </div></div>`;
+}
+async function rentClick(t){
+  const ds=t.dataset;
+  if(ds.relfold){ const k=S.rel.when+":"+ds.relfold; const f=relFoldSet(); f.has(k)?f.delete(k):f.add(k); relFoldSave(); render(); return true; }
+  if(ds.relfoldall){ const f=relFoldSet(); ds.relkeys.split(",").forEach(m=>{ const k=S.rel.when+":"+m; ds.relfoldall==="1"?f.add(k):f.delete(k); }); relFoldSave(); render(); return true; }
+  if(ds.act==="rentListToggle"){ S.rentListOpen=!S.rentListOpen; render(); return true; }
+  if(ds.act==="rentNew"){ openRentSheet(null); return true; }
+  if(ds.rentrel){ const r=relFromAttr(ds.rentrel); const nt=norm(r.t); const ci=allReleases().find(x=>x._n===nt&&x.d===r.d)||{};
+    openRentSheet({title:r.t, platform:r.p[0], coverId:ci.c||infoOf(r.t)?.coverId||"", genre:ci.g||"", developer:ci.dev||"", publisher:ci.pub||""}); return true; }
+  if(ds.rentwish){ const g=S.games.find(x=>x.id===ds.rentwish); if(g) openRentSheet({title:g.title, platform:g.platform}); return true; }
+  if(ds.rentback){ const r=S.rentals.find(x=>x.id===ds.rentback); if(r){ t.disabled=true; try{ await saveRent({...r, returned:true, returnedOn:today()}); toast(`คืน ${r.title} แล้ว ย้ายไปประวัติ`); if(S.detail) renderDetail(); }catch{ t.disabled=false; } } return true; }
+  if(ds.rentdetail){ openDetail({rentId:ds.rentdetail}); return true; }
+  if(ds.rentedit){ const r=S.rentals.find(x=>x.id===ds.rentedit); if(r) openRentSheet(r); return true; }
+  const sh=S.rentSheet; if(!sh) return false; const d=sh.draft;
+  if(ds.rentseg){ pullRentForm();
+    if(ds.rentseg==="platform") d.platform=ds.v;
+    if(ds.rentseg==="returned"){ d.returned=ds.v==="1"; if(d.returned && !d.returnedOn) d.returnedOn=(d.due && d.due<today())?today():(d.due||today()); }
+    renderRentSheet(); return true; }
+  if(ds.rentdue){ pullRentForm(); d.due=addDaysISO(d.start||today(), +ds.rentdue); renderRentSheet(); return true; }
+  switch(ds.act){
+    case "rentClose": closeSheet(); return true;
+    case "rentSave": pullRentForm(); d.title=(d.title||"").trim();
+      if(!d.title){ toast("ใส่ชื่อเกมก่อน"); $("#rf-title")?.focus(); return true; }
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(d.start||"")){ toast("ใส่วันเช่าก่อน"); $("#rf-start")?.focus(); return true; }
+      if(d.due && d.due<d.start){ toast("วันคืนต้องไม่ก่อนวันเช่า"); $("#rf-due")?.focus(); return true; }
+      if(!d.returned) d.returnedOn="";
+      t.disabled=true; try{ await saveRent(d); closeSheet(); toast(d.returned?"บันทึกลงประวัติการเช่าแล้ว":"บันทึกการเช่าแล้ว"); }catch{ t.disabled=false; } return true;
+    case "rentDelete": pullRentForm(); sh.confirmDelete=true; renderRentSheet(); return true;
+    case "rentNoDelete": sh.confirmDelete=false; renderRentSheet(); return true;
+    case "rentReallyDelete": t.disabled=true; try{ await deleteRent(d.id); closeSheet(); toast("ลบแล้ว"); }catch{ t.disabled=false; toast("ลบไม่สำเร็จ ลองอีกครั้ง"); } return true;
+  }
+  return false;
+}
+
+/* ---------- background jobs (run by Claude as scheduled tasks) ---------- */
+function jobKey(kind,title){ return title ? kind+"_"+infoKey(title) : kind; }
+function jobRecent(kind,title){
+  const j=S.jobs[jobKey(kind,title)]; if(!j||!j.at) return null;
+  const mins=(Date.now()-new Date(j.at).getTime())/60000;
+  return mins < JOBS[kind].mins*1.5 ? j : null;
+}
+function timeAgo(iso){ const m=Math.round((Date.now()-new Date(iso).getTime())/60000); return m<1?"เมื่อสักครู่":m<60?`${m} นาทีที่แล้ว`:m<1440?`${Math.round(m/60)} ชั่วโมงที่แล้ว`:fmtDate(iso.slice(0,10)); }
+async function fireJob(kind, title, plats){
+  if(!MCP||S.jobBusy||!JOBS[kind]||!JOBS[kind].id) return;
+  S.jobBusy=jobKey(kind,title); render();
+  try{
+    const now=new Date().toISOString();
+    const next=JSON.parse(JSON.stringify(S.jobs||{}));
+    if(kind==="images" && title){
+      const q=(next.imageQueue||[]).filter(e=>e.infoKey!==infoKey(title));
+      q.push({title, infoKey:infoKey(title), platforms:plats||[], at:now});
+      next.imageQueue=q.slice(-20);
+      await DB.doc("meta/jobs").set(next);
+    }
+    await MCP.callTool("Claude Code Remote","fire_trigger",{trigger_id:JOBS[kind].id},{cache:false});
+    next[jobKey(kind,title)]={at:now};
+    S.jobs=next; try{ await DB.doc("meta/jobs").set(next); }catch{}
+    toast(kind==="sync"||kind==="top10"?"สั่งอัปเดตแล้ว ข้อมูลจะเปลี่ยนเองเมื่อเสร็จ":"สั่งหารูปแล้ว รูปจะขึ้นเองเมื่อเสร็จ");
+  }catch(e){
+    const c=e&&e.code;
+    toast(c==="server_not_connected"||c==="server_not_found"?"ต้องเปิดการเชื่อมต่อ Claude Code Remote ในการตั้งค่า claude.ai ก่อน":
+          c==="consent_required"||c==="not_granted"?"ต้องกดอนุญาตให้แอพสั่งงาน Claude ก่อน":
+          c==="rate_limited"?"สั่งถี่เกินไป ลองใหม่ภายหลัง":"สั่งงานไม่สำเร็จ ลองใหม่อีกครั้ง");
+  }
+  S.jobBusy=""; render();
+}
+function jobButton(kind,title,plats,label){
+  if(!MCP || !JOBS[kind] || !JOBS[kind].id) return "";
+  const rec=jobRecent(kind,title); const busy=S.jobBusy===jobKey(kind,title);
+  const attr=title?` data-jobtitle="${esc(title)}" data-jobplats="${esc((plats||[]).join(","))}"`:"";
+  return `<button class="btn small" data-job="${kind}"${attr} ${rec||busy?"disabled":""}>${busy?"กำลังสั่ง…":rec?"กำลังทำงานอยู่…":label}</button>
+    <span class="hint">${rec?`สั่งไปเมื่อ ${timeAgo(rec.at)} ใช้เวลาราว ${JOBS[kind].mins} นาที ข้อมูลจะขึ้นเองเมื่อเสร็จ`:`ทำงานเบื้องหลังราว ${JOBS[kind].mins} นาที ปิดแอพได้`}</span>`;
+}
+
+/* ---------- game detail ---------- */
+function infoKey(title){
+  const k=norm(title).replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,120);
+  if(k) return k;
+  let h=0; for(const c of String(title)) h=(h*31+c.codePointAt(0))>>>0; return "t"+h.toString(36);
+}
+function infoOf(title){ return S.info[infoKey(title)] || null; }
+function coverOf(title,g){ return (g&&g.coverId) || infoOf(title)?.coverId || (g ? (allReleases(), S.coverMap.get(norm(title))||"") : ""); }
+/* Cover image: a plain asset id, or "sp:<assetId>:<index>[:<cols>:<rows>]" = one cell of a cover sprite sheet (default 8x8) */
+const BLOB = id => window.GL_BACKEND ? window.GL_BACKEND.blobUrl(id) : "";
+function coverHTML(cov, cls, alt){
+  cov=String(cov||"");
+  if(cov.startsWith("sp:")){
+    const [,id,i,c,r]=cov.split(":"); const cols=+c||8, rows=+r||8, n=+i||0;
+    const x=cols>1?(n%cols)/(cols-1)*100:0, y=rows>1?Math.floor(n/cols)/(rows-1)*100:0;
+    return `<span class="spr ${cls||""}" role="img" aria-label="${esc(alt||"")}" style="background-image:url(${esc(BLOB(id))});background-size:${cols*100}% ${rows*100}%;background-position:${x.toFixed(4)}% ${y.toFixed(4)}%"></span>`;
+  }
+  return `<img${cls?` class="${cls}"`:""} src="${esc(BLOB(cov))}" alt="${esc(alt||"")}" loading="lazy">`;
+}
+function thumbHTML(title,plat,cov,cls){
+  if(cov) return `<span class="${cls}">${coverHTML(cov,"","")}</span>`;
+  const ch=(String(title).replace(/^(the|a)\s+/i,"").match(/[A-Za-z0-9ก-๙]/)||["?"])[0].toUpperCase();
+  return `<span class="${cls}"><i class="${esc(plat)}"></i><span>${esc(ch)}</span></span>`;
+}
+function ytLink(q){ return "https://www.youtube.com/results?search_query="+encodeURIComponent(q); }
+const PLAT_LONG={PS5:"PS5",NS2:"Nintendo Switch 2",NS1:"Nintendo Switch"};
+
+function openDetail(d){ S.detail=Object.assign({aiState:""},d); renderDetail(); }
+function detailData(){
+  const D=S.detail; if(!D) return null;
+  if(D.rentId){ const rt=S.rentals.find(x=>x.id===D.rentId); if(!rt) return null; const nt=norm(rt.title);
+    const ci=allReleases().find(r=>r._n===nt && r.p.includes(rt.platform)) || allReleases().find(r=>r._n===nt) || {};
+    return { rent:rt, title:rt.title, plats:[rt.platform||"PS5"], release:ci.d||"" }; }
+  if(D.gameId){ const g=S.games.find(x=>x.id===D.gameId); if(!g) return null;
+    return { g, title:g.title, plats:gamePlats(g), release:g.releaseDate }; }
+  const r=D.rel; const mine=findOwnedMatch(r.t,r.p);
+  return { r, title:r.t, plats:r.p, release:r.d, has:mine.find(x=>x.status!=="wishlist"), wish:mine.find(x=>x.status==="wishlist") };
+}
+function renderDetail(){
+  const D=S.detail; const x=detailData(); if(!x){ closeSheet(); return; }
+  const info=infoOf(x.title)||{}; const g=x.g;
+  const nt=norm(x.title); const ci=allReleases().find(r=>r._n===nt&&(!x.r||r.d===x.r.d)) || allReleases().find(r=>r._n===nt) || {};
+  const dev=(g&&g.developer)||(x.rent&&x.rent.developer)||info.developer||ci.dev||""; const pub=(g&&g.publisher)||(x.rent&&x.rent.publisher)||info.publisher||ci.pub||"";
+  const rt=x.rent;
+  const cov=(rt&&rt.coverId)||coverOf(x.title,g||(rt?{}:null))||ci.c||"";
+  const p0=x.plats[0]; const pl=PLAT_LONG[p0]||"";
+  const loan=g&&currentLoan(g);
+  const relAttr=x.r?`${esc(x.r.t)}|${x.r.d}|${x.r.p.join(",")}`:"";
+  document.body.style.overflow="hidden";
+  $("#sheetRoot").innerHTML=`<div class="scrim" data-scrim>
+  <div class="sheet tall" role="dialog" aria-modal="true" aria-labelledby="dTitle">
+    <header><h3>รายละเอียดเกม</h3>${detailNavHTML()}<button class="btn ghost small" data-act="close" aria-label="ปิด">ปิด</button></header>
+    <div class="content">
+      <div class="detail-top">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="cover"><div class="cb ${p0}">${platLabel(p0)}</div>${cov?coverHTML(cov,"","ปก "+x.title):`<div class="ph">${esc(x.title)}<span class="sub" style="font-family:var(--f-body);font-weight:400;margin-top:6px">ยังไม่มีรูปปก</span></div>`}</div>
+          ${ASSETS?`<label class="btn small" for="coverFile">${cov?"เปลี่ยนรูปปก":"เพิ่มรูปปก"}</label><input id="coverFile" type="file" accept="image/*" hidden>`:""}
+        </div>
+        <div style="min-width:0">
+          <h2 class="dtitle" id="dTitle">${esc(x.title)}</h2>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px">${(x.g&&x.g.ps4)||ci.ps4?PS4TAG+`<span class="pill soft">เล่นบน PS5 ได้</span>`:x.plats.map(platTag).join("")}
+            ${rt? rentPill(rt) : g? (g.status==="wishlist"?`<span class="pill soft">Wishlist</span>`: loan?`<span class="pill warn">อยู่กับ ${esc(loan.who)}</span>`:`<span class="pill ok">มีแล้ว</span>`) : x.has?`<span class="pill ok">มีแล้ว</span>`: x.wish?`<span class="pill soft">ใน Wishlist</span>`:""}</div>
+          <dl class="facts">
+            <dt>ผู้พัฒนา</dt><dd>${esc(dev)||"—"}</dd>
+            <dt>ค่ายเกม</dt><dd>${esc(pub)||"—"}</dd>
+            ${(()=>{ const gn=splitGenres(ci.g||(g?gameGenre(g):info.genre)||(x.rent&&x.rent.genre)||"").join(", "); return gn?`<dt>แนวเกม</dt><dd>${esc(gn)}</dd>`:""; })()}
+            <dt>วางจำหน่าย</dt><dd>${fmtDate(x.release)||"—"}</dd>
+            ${rt?`<dt>เช่าเมื่อ</dt><dd>${fmtDate(rt.start)||"—"}</dd><dt>${rt.returned?"คืนเมื่อ":"กำหนดคืน"}</dt><dd>${fmtDate(rt.returned?rt.returnedOn:rt.due)||"—"}</dd><dt>ระยะเวลา</dt><dd>${rentDays(rt)||"—"} วัน</dd><dt>ค่าเช่า</dt><dd class="mono">${rt.fee!==""&&rt.fee!=null?baht(rt.fee):"—"}</dd>${rt.shop?`<dt>เช่าจาก</dt><dd>${esc(rt.shop)}</dd>`:""}`:""}
+            ${g&&g.status!=="wishlist"?`<dt>ซื้อเมื่อ</dt><dd>${fmtDate(g.purchaseDate)||"—"}</dd><dt>ราคา</dt><dd class="mono">${g.price!==""&&g.price!=null?baht(g.price):"—"}</dd><dt>รูปแบบ</dt><dd>${fmtLabel(g)}${g.store?" · "+esc(g.store):""}</dd>`:""}
+          </dl>
+        </div>
+      </div>
+      ${info.summary?`<p style="margin:0">${esc(info.summary)}</p>`:""}
+
+      ${SAMPLE?`<div class="tools"><button class="btn small" data-act="dAi" ${D.aiState==="busy"?"disabled":""}>${D.aiState==="busy"?"กำลังค้น…":(info.summary||dev?"ค้นข้อมูลใหม่ด้วย Claude":"ค้นข้อมูลเกมด้วย Claude")}</button>${D.aiState&&D.aiState!=="busy"?`<span class="hint">${esc(D.aiState)}</span>`:""}</div>`:""}
+      ${MCP&&!cov?`<div class="tools">${jobButton("images",x.title,x.plats,"หาปกเกมนี้ตอนนี้")}</div>`:""}
+      <div class="vids">
+        <a class="vid" href="${ytLink(x.title+" "+pl+" trailer")}" target="_blank" rel="noopener"><span class="play">▶</span><div><b>ตัวอย่างเกม</b><span>Trailer บน YouTube</span></div></a>
+        <a class="vid" href="${ytLink(x.title+" "+pl+" gameplay")}" target="_blank" rel="noopener"><span class="play">▶</span><div><b>ตัวอย่างการเล่น</b><span>Gameplay บน YouTube</span></div></a>
+      </div>
+      ${g&&g.notes?`<div class="box"><h4>โน้ต</h4><div>${esc(g.notes)}</div></div>`:""}
+      ${rt&&rt.notes?`<div class="box"><h4>โน้ต</h4><div>${esc(rt.notes)}</div></div>`:""}
+    </div>
+    <footer><span class="sp"></span>${rt?`${rt.returned?"":`<button class="btn" data-rentback="${esc(rt.id)}">คืนแล้ว</button>`}<button class="btn primary" data-rentedit="${esc(rt.id)}">แก้ไขการเช่า</button>`: g?`<button class="btn primary" data-act="dEdit">แก้ไข / ยืม-คืน</button>`:
+      `<button class="btn heart" data-wish="${relAttr}" aria-pressed="${!!x.wish}">${x.wish?"♥ ใน Wishlist":"♡ Wishlist"}</button>${x.r&&x.r.d<=today()?rentBtn(x.r.t,"rentrel",`${x.r.t}|${x.r.d}|${x.r.p.join(",")}`,"btn"):""}<button class="btn primary" data-bought="${relAttr}">ซื้อ</button>`}</footer>
+  </div></div>`;
+}
+
+async function saveInfo(title, patch){
+  const key=infoKey(title); const cur=S.info[key]||{};
+  const doc=Object.assign({}, cur, patch, {title, updatedAt:new Date().toISOString()});
+  S.info[key]=doc;
+  if(S.mode==="cloud") await DB.collection("gameinfo").doc(key).set(JSON.parse(JSON.stringify(doc)));
+}
+
+async function detailAi(){
+  const x=detailData(); if(!x||!SAMPLE) return; const D=S.detail;
+  D.aiState="busy"; renderDetail();
+  const prompt=`You are filling a personal video game catalogue for a Thai player. Game: "${x.title}" on ${x.plats.map(p=>PLAT_LONG[p]).join(", ")}.
+Reply with only a JSON object:
+{"developer": studio name, "publisher": publisher name, "genre": 1-3 genres in English, comma separated (e.g. "Action role-playing, Open world"), "summary": 2-3 sentence description of the game in Thai, "releaseDate": "YYYY-MM-DD" first release on ${PLAT_LONG[x.plats[0]]} or "", "confident": true|false}
+Use "" for anything you do not know. Do not invent facts.`;
+  try{
+    const r=await SAMPLE.json(prompt,{cache:{gcTime:86400000}});
+    if(!S.detail) return;
+    if(r&&typeof r==="object"){
+      const patch={}; ["developer","publisher","genre","summary"].forEach(k=>{ if(r[k]) patch[k]=String(r[k]); });
+      // The game may have been renamed: refresh its fields and cover from the current title.
+      // The release catalogue wins where it knows the game; Claude's answer fills the rest.
+      const nt=norm(x.title); const rel=allReleases();
+      const ci=rel.find(q=>q._n===nt && x.plats.some(p=>q.p.includes(p))) || rel.find(q=>q._n===nt) || {};
+      const fresh={
+        developer: ci.dev||patch.developer||"", publisher: ci.pub||patch.publisher||"", genre: ci.g||patch.genre||"",
+        releaseDate: ci.d || (/^\d{4}-\d{2}-\d{2}$/.test(r.releaseDate||"")?r.releaseDate:""),
+        coverId: S.info[infoKey(x.title)]?.coverId || ci.c || S.coverMap.get(nt) || "" }; // a cover picked for this title wins over the catalogue's
+      await saveInfo(x.title, patch);
+      const apply=(c,keys)=>{ let ch=false; keys.forEach(k=>{ if(fresh[k] && c[k]!==fresh[k]){ c[k]=fresh[k]; ch=true; } }); return ch; };
+      let newCover=false;
+      if(x.g){ const c=JSON.parse(JSON.stringify(x.g)); const before=c.coverId;
+        if(apply(c,["developer","publisher","genre","releaseDate","coverId"])) await saveGame(c); newCover=!!fresh.coverId && fresh.coverId!==before; }
+      if(x.rent){ const c=JSON.parse(JSON.stringify(x.rent)); const before=c.coverId;
+        if(apply(c,["developer","publisher","genre","coverId"])) await saveRent(c); newCover=!!fresh.coverId && fresh.coverId!==before; }
+      const coverNote = newCover ? " และเปลี่ยนรูปปกให้ตรงกับชื่อเกมแล้ว" : (!fresh.coverId && (x.g||x.rent) ? " (ยังไม่เจอรูปปกของชื่อนี้ กด “เปลี่ยนรูปปก” เพื่อใส่เองได้)" : "");
+      S.detail.aiState = (r.confident===false ? "Claude ไม่แน่ใจข้อมูลบางส่วน" : "อัปเดตข้อมูลแล้ว") + coverNote;
+    }
+  }catch(e){
+    if(!S.detail) return; const c=e&&e.code;
+    if(["not_granted","sampling_disabled","not_declared","capability_disabled","capability_removed"].includes(c)){ SAMPLE=null; S.detail.aiState=""; }
+    else S.detail.aiState = c==="rate_limited"?"ใช้งานถี่เกินไป ลองใหม่ภายหลัง":"ค้นข้อมูลไม่สำเร็จ ลองใหม่อีกครั้ง";
+  }
+  if(S.detail) renderDetail();
+}
+
+function shrinkImage(file,maxSide){
+  return new Promise((res,rej)=>{
+    const url=URL.createObjectURL(file); const img=new Image();
+    img.onload=()=>{ const max=maxSide||720; let w=img.naturalWidth,h=img.naturalHeight; const k=Math.min(1,max/Math.max(w,h)); w=Math.round(w*k); h=Math.round(h*k);
+      const c=document.createElement("canvas"); c.width=w; c.height=h; c.getContext("2d").drawImage(img,0,0,w,h);
+      URL.revokeObjectURL(url); c.toBlob(b=>b?res(b):rej(new Error("encode")),"image/jpeg",0.85); };
+    img.onerror=()=>{ URL.revokeObjectURL(url); rej(new Error("decode")); };
+    img.src=url;
+  });
+}
+function closeShot(){ const lb=$("#lbRoot"); if(lb) lb.innerHTML=""; }
+async function uploadCover(file){
+  const x=detailData(); if(!x||!ASSETS) return;
+  toast("กำลังอัปโหลดรูปปก…");
+  try{
+    const blob=await shrinkImage(file);
+    const up=await ASSETS.upload(blob,{type:"image/jpeg"});
+    await saveInfo(x.title,{coverId:up.id});
+    if(x.g){ const c=JSON.parse(JSON.stringify(x.g)); c.coverId=up.id; await saveGame(c); }
+    if(x.rent){ await saveRent({...x.rent, coverId:up.id}); }
+    toast("บันทึกรูปปกแล้ว"); renderDetail();
+  }catch(e){ toast(e&&e.code==="too_large"?"ไฟล์ใหญ่เกินไป":"อัปโหลดรูปไม่สำเร็จ ลองรูปอื่น"); }
+}
+
+/* ---------- sheet (add / edit) ---------- */
+function openSheet(g, opts={}){
+  const base = { id:uid(), title:"", platform:"PS5", status:"owned", developer:"", publisher:"", genre:"", releaseDate:"", purchaseDate:today(), format:"disc", store:"", price:"", notes:"", loans:[] };
+  const draft = JSON.parse(JSON.stringify(Object.assign(base, g||{})));
+  if(opts.markBought){ draft.status="owned"; if(!draft.purchaseDate) draft.purchaseDate=today(); }
+  S.sheet={ draft, isNew:!S.games.some(x=>x.id===draft.id), markBought:!!opts.markBought, loanWho:"", loanOut:today(), aiState:"", options:opts.platformOptions||null };
+  S.confirmDelete=false; S.detail=null;
+  renderSheet();
+  setTimeout(()=>{ if(S.sheet && S.sheet.isNew && !draft.title) $("#f-title")?.focus(); },50);
+}
+/* Detail sheet paging: the games of the list the sheet was opened from, in screen order */
+const NAV_ATTRS=[["detail","gameId"],["reldetail","rel"],["rentdetail","rentId"]];
+function detailNavFrom(t){
+  const seen=new Set(), list=[];
+  $("#app").querySelectorAll("[data-detail],[data-reldetail],[data-rentdetail]").forEach(el=>{
+    const a=NAV_ATTRS.find(([k])=>el.dataset[k]); if(!a) return; const key=a[0]+"|"+el.dataset[a[0]];
+    if(!seen.has(key)){ seen.add(key); list.push({k:a[0],v:el.dataset[a[0]]}); }
+  });
+  const a=NAV_ATTRS.find(([k])=>t.dataset[k]); const i=list.findIndex(x=>x.k===a[0]&&x.v===t.dataset[a[0]]);
+  return i<0||list.length<2 ? null : {list,i};
+}
+function detailStep(d){
+  const N=S.detailNav; if(!N||!S.detail) return; const i=N.i+d; if(i<0||i>=N.list.length) return;
+  N.i=i; const x=N.list[i]; const a=NAV_ATTRS.find(([k])=>k===x.k);
+  openDetail({[a[1]]: a[1]==="rel"?relFromAttr(x.v):x.v});
+  const c=$("#sheetRoot .sheet .content"); if(c) c.scrollTop=0;
+}
+function detailNavHTML(){
+  const N=S.detailNav; if(!N) return "";
+  const chev=d=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="${d}"/></svg>`;
+  return `<span class="dnav"><button class="btn ghost small" data-dnav="-1" aria-label="เกมก่อนหน้า" ${N.i<=0?"disabled":""}>${chev("M15 6l-6 6 6 6")}</button><span class="sub mono">${N.i+1}/${N.list.length}</span><button class="btn ghost small" data-dnav="1" aria-label="เกมถัดไป" ${N.i>=N.list.length-1?"disabled":""}>${chev("M9 6l6 6-6 6")}</button></span>`;
+}
+(()=>{ let x0=null,y0=0;
+  document.addEventListener("touchstart",e=>{ if(!S.detail||!S.detailNav||!e.target.closest("#sheetRoot .sheet")){ x0=null; return; } const p=e.touches[0]; x0=p.clientX; y0=p.clientY; },{passive:true});
+  document.addEventListener("touchend",e=>{ if(x0==null) return; const p=e.changedTouches[0]; const dx=p.clientX-x0, dy=p.clientY-y0; x0=null;
+    if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5) detailStep(dx<0?1:-1); },{passive:true});
+})();
+function closeSheet(){ S.detailNav=null; S.sheet=null; S.detail=null; S.subSheet=null; S.rentSheet=null; $("#sheetRoot").innerHTML=""; document.body.style.overflow=""; }
+
+function seg(name, opts, val){
+  return `<div class="seg" role="group">${opts.map(([v,l])=>`<button type="button" data-seg="${name}" data-v="${v}" aria-pressed="${v===val}">${l}</button>`).join("")}</div>`;
+}
+function borrowerNames(){ const s=new Set(); S.games.forEach(g=>(g.loans||[]).forEach(l=>l.who&&s.add(l.who))); return [...s]; }
+function storeNames(){ const s=new Set(DEFAULT_STORES); S.games.forEach(g=>g.store&&s.add(g.store)); return [...s]; }
+
+function renderSheet(){
+  const sh=S.sheet; if(!sh) return;
+  const d=sh.draft; const own=d.status!=="wishlist";
+  const loan=currentLoan(d);
+  const past=(d.loans||[]).filter(l=>l.back);
+  document.body.style.overflow="hidden";
+  $("#sheetRoot").innerHTML = `<div class="scrim" data-scrim>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <header><h3 id="sheetTitle">${sh.isNew?(own?"เพิ่มเกมเข้าคลัง":"เพิ่มใน Wishlist"):"แก้ไขเกม"}</h3><button class="btn ghost small" data-act="close" aria-label="ปิด">ปิด</button></header>
+    <div class="content">
+      <div class="field"><label for="f-title">ชื่อเกม</label>
+        <div class="titlewrap"><input id="f-title" list="dl-rel" autocomplete="off" value="${esc(d.title)}" placeholder="เช่น Ghost of Yotei">
+        ${SAMPLE?`<button class="btn" type="button" data-act="ai" ${sh.aiState==="busy"?"disabled":""}>${sh.aiState==="busy"?"กำลังค้น…":"เติมข้อมูล"}</button>`:""}</div>
+        <datalist id="dl-rel">${titleOptions(d.title,d.platform)}</datalist>
+        ${sh.aiState&&sh.aiState!=="busy"?`<div class="hint">${esc(sh.aiState)}</div>`:SAMPLE?`<div class="hint">“เติมข้อมูล” ให้ Claude หาผู้พัฒนา ผู้จัดจำหน่าย และวันวางขาย ตรวจทานก่อนบันทึก</div>`:""}
+      </div>
+      <div id="platBox">${platBoxHTML()}</div>
+      <div class="field"><span class="lab">สถานะ</span>${seg("status",[["owned","มีแล้ว"],["wishlist","Wishlist"]],own?"owned":"wishlist")}</div>
+      <div class="two stack">
+        <div class="field"><label for="f-developer">ผู้พัฒนา</label><input id="f-developer" value="${esc(d.developer)}"></div>
+        <div class="field"><label for="f-publisher">ผู้จัดจำหน่าย</label><input id="f-publisher" value="${esc(d.publisher)}"></div>
+      </div>
+      <div class="field"><span class="lab">แนวเกม</span><div id="genreBox">${genreBoxHTML(d)}</div></div>
+      <div class="field"><label for="f-releaseDate">วันวางจำหน่าย</label><input id="f-releaseDate" type="date" value="${esc(d.releaseDate)}"></div>
+      ${own?`
+      <div class="two stack">
+        <div class="field"><label for="f-purchaseDate">วันที่ซื้อ</label><input id="f-purchaseDate" type="date" value="${esc(d.purchaseDate)}">
+          <button type="button" class="btn small ghost" data-act="useRelease" style="align-self:flex-start">จำไม่ได้ ใช้วันวางจำหน่าย</button></div>
+        <div class="field"><label for="f-price">ราคา (บาท)</label><input id="f-price" type="number" inputmode="decimal" min="0" step="any" value="${esc(d.price)}" placeholder="0"></div>
+      </div>
+      <div class="field"><span class="lab">รูปแบบ</span><div id="fmtBox">${fmtSegHTML(d)}</div></div>
+      <div class="field"><label for="f-store">ซื้อจากร้าน / Store</label><input id="f-store" list="dl-store" value="${esc(d.store)}" placeholder="เช่น PlayStation Store, Nintendo eShop, ร้านในห้าง">
+        <datalist id="dl-store">${storeNames().map(s=>`<option value="${esc(s)}">`).join("")}</datalist></div>
+      ${sh.isNew||sh.markBought?"":`<div class="box"><h4>การยืม ${loan?`<span class="pill warn">อยู่กับ ${esc(loan.who)}</span>`:`<span class="pill ok">อยู่กับฉัน</span>`}</h4>
+        ${loan?`<div class="sub">ยืมไปเมื่อ ${fmtDate(loan.out)||"—"} (${daysBetween(loan.out||today(),today())} วัน)</div>
+          <div class="tools"><button class="btn primary small" type="button" data-act="returned">คืนแล้ว</button><button class="btn ghost small" type="button" data-act="cancelLoan">ลบรายการยืมนี้</button></div>`
+        :`<div class="inline-row"><div class="field"><label for="f-loanWho">ให้ใครยืม</label><input id="f-loanWho" list="dl-who" value="${esc(sh.loanWho)}" placeholder="ชื่อเพื่อน"></div>
+          <div class="field"><label for="f-loanOut">วันที่ยืม</label><input id="f-loanOut" type="date" value="${esc(sh.loanOut)}"></div>
+          <button class="btn small" type="button" data-act="lend" style="min-height:44px">บันทึกการยืม</button></div>
+          <datalist id="dl-who">${borrowerNames().map(s=>`<option value="${esc(s)}">`).join("")}</datalist>`}
+        ${past.length?`<div class="hint">ประวัติ: ${past.map(l=>`${esc(l.who)} (${fmtDate(l.out)||"?"} → ${fmtDate(l.back)})`).join(", ")}</div>`:""}
+      </div>`}`:""}
+      <div class="field"><label for="f-notes">โน้ต</label><textarea id="f-notes" placeholder="เช่น ภาษาไทย, Zone 3, มีโค้ด DLC">${esc(d.notes)}</textarea></div>
+    </div>
+    <footer>${S.confirmDelete?`<span class="confirm-q">ลบเกมนี้ออกถาวร?</span><span class="sp"></span><button class="btn ghost" data-act="noDelete">ไม่ลบ</button><button class="btn danger solid" data-act="reallyDelete">ยืนยันลบ</button>`
+      :`${!sh.isNew?`<button class="btn danger" data-act="delete">ลบ</button>`:""}<span class="sp"></span><button class="btn ghost" data-act="close">ยกเลิก</button><button class="btn primary" data-act="save">บันทึก</button>`}</footer>
+  </div></div>`;
+}
+
+function pullForm(){
+  const sh=S.sheet; if(!sh) return; const d=sh.draft;
+  const v=id=>{ const el=$("#f-"+id); return el? el.value : undefined; };
+  ["title","developer","publisher","genre","releaseDate","purchaseDate","store","notes"].forEach(k=>{ const x=v(k); if(x!==undefined) d[k]=k==="title"?x.trim():x; });
+  const p=v("price"); if(p!==undefined) d.price = p===""?"":Number(p);
+  if($("#f-loanWho")){ sh.loanWho=$("#f-loanWho").value; sh.loanOut=$("#f-loanOut").value; }
+}
+
+/* Consoles a game was released on, from the release database; null when unknown */
+function availablePlats(title){
+  const n=norm(title); if(!n) return null; const set=new Set();
+  for(const r of allReleases()) if(r._n===n) r.p.forEach(x=>set.add(x));
+  return set.size ? PLAT_ORDER.filter(x=>set.has(x)) : null;
+}
+function fitPlatform(){
+  const sh=S.sheet; if(!sh) return; const d=sh.draft;
+  const av = sh.allPlats ? null : availablePlats(d.title);
+  if(av && !av.includes(d.platform)){
+    const exact=allReleases().find(r=>r.t.toLowerCase()===String(d.title).trim().toLowerCase() && r.p.some(x=>av.includes(x)));
+    d.platform = exact ? exact.p.find(x=>av.includes(x)) : av[0]; if(d.platform==="PS5") delete d.both; }
+  return av;
+}
+function fmtSegHTML(d){ return seg("format",[["disc",d.platform==="PS5"?"แผ่น":"ตลับ"],["digital","ดาวน์โหลด"]],d.format); }
+function platBoxHTML(){
+  const sh=S.sheet, d=sh.draft; const av=fitPlatform();
+  const all=[["PS5","PS5"],["NS2",platLabel("NS2")],["NS1","Switch 1"]];
+  const opts = av ? all.filter(o=>av.includes(o[0])) : all;
+  return `<div class="field"><span class="lab">เครื่อง</span>${seg("platform",opts,d.platform)}
+      ${av&&av.length<3?`<div class="hint">เกมนี้ออกบน ${av.map(x=>PLAT[x].label).join(", ")} <button type="button" class="linkbtn" data-act="allPlats">เลือกเครื่องอื่น</button></div>`:""}</div>
+    ${d.platform!=="PS5"?`<div class="field"><span class="lab">เล่นได้บน</span>${seg("both",[["0","เฉพาะเครื่องที่เลือก"],["1","ทั้ง Switch 1 และ 2"]],d.both===true?"1":"0")}</div>`:""}`;
+}
+function titleOptions(q,plat){
+  const n=norm(q); if(n.length<2) return "";
+  const out=[], seen=new Set();
+  for(const pass of [0,1]){
+    for(const r of allReleases()){
+      if(out.length>=40) break;
+      if(!r._n.includes(n) || seen.has(r.t)) continue;
+      const here=r.p.includes(plat);
+      if(pass===0 && !here) continue;
+      if(pass===1 && (here || (plat!=="NS2" && /switch 2 edition/i.test(r.t)))) continue;
+      seen.add(r.t); out.push(r);
+    }
+  }
+  out.sort((a,b)=>(b._n.startsWith(n))-(a._n.startsWith(n)));
+  return out.map(r=>`<option value="${esc(r.t)}">`).join("");
+}
+function applyReleaseMatch(d){
+  const items=allReleases(); const t=norm(d.title); if(!t) return false;
+  const cands=items.filter(r=>r._n===t); if(!cands.length) return false;
+  // Only trust an entry for the same console; never switch the console the user picked.
+  const same=cands.find(x=>x.p.includes(d.platform));
+  const r=same || cands[0];
+  if(same && !d.releaseDate) d.releaseDate=r.d;
+  if(same && same.ps4) d.ps4=1; else if(same) delete d.ps4;
+  if(same && d.platform!=="PS5" && d.both===undefined && r.p.includes("NS1") && r.p.includes("NS2")) d.both=true;
+  if(!d.genre && r.g) d.genre=r.g;
+  if(!d.developer && r.dev) d.developer=r.dev;
+  if(!d.publisher && r.pub) d.publisher=r.pub;
+  return true;
+}
+
+async function aiFill(){
+  pullForm(); const sh=S.sheet; const d=sh.draft;
+  if(!d.title){ toast("พิมพ์ชื่อเกมก่อน"); return; }
+  sh.aiState="busy"; renderSheet();
+  const prompt = `You are filling a personal video game catalogue. Game title: "${d.title}". Platform: ${PLAT[d.platform].label} (${d.platform==="PS5"?"PlayStation 5":d.platform==="NS2"?"Nintendo Switch 2":"Nintendo Switch"}).
+Reply with only a JSON object: {"title": official English title, "developer": string, "publisher": string, "genre": "1-3 genres in English, comma separated, e.g. Action role-playing, Open world", "releaseDate": "YYYY-MM-DD" release date on that platform (worldwide/US) or "" if unknown, "confident": true|false}.
+Use "" for anything you are not sure about. Example: {"title":"Elden Ring","developer":"FromSoftware","publisher":"Bandai Namco Entertainment","releaseDate":"2022-02-25","confident":true}`;
+  try{
+    const r = await SAMPLE.json(prompt, { cache:{gcTime:86400000} });
+    if(!S.sheet) return;
+    const dd=S.sheet.draft;
+    if(r && typeof r==="object"){
+      if(r.developer && !dd.developer) dd.developer=String(r.developer);
+      if(r.genre && !dd.genre) dd.genre=String(r.genre);
+      if(r.publisher && !dd.publisher) dd.publisher=String(r.publisher);
+      if(/^\d{4}-\d{2}-\d{2}$/.test(r.releaseDate||"") && !dd.releaseDate) dd.releaseDate=r.releaseDate;
+      applyReleaseMatch(dd);
+      S.sheet.aiState = r.confident===false ? "Claude ไม่แน่ใจข้อมูลบางส่วน ตรวจทานก่อนบันทึก" : "เติมข้อมูลแล้ว ตรวจทานก่อนบันทึก";
+    } else S.sheet.aiState="ไม่พบข้อมูล กรอกเองได้เลย";
+  }catch(e){
+    if(!S.sheet) return;
+    const c=e&&e.code;
+    if(c==="not_granted"||c==="sampling_disabled"||c==="not_declared"||c==="capability_disabled"||c==="capability_removed"){ SAMPLE=null; S.sheet.aiState=""; }
+    else S.sheet.aiState = c==="rate_limited" ? "ใช้งานถี่เกินไป ลองใหม่ภายหลัง" : "ค้นข้อมูลไม่สำเร็จ ลองใหม่หรือกรอกเอง";
+  }
+  renderSheet();
+}
+
+async function saveSheet(){
+  pullForm(); const sh=S.sheet; const d=sh.draft;
+  if(!d.title){ toast("ใส่ชื่อเกมก่อนบันทึก"); $("#f-title")?.focus(); return; }
+  if(sh.loanWho && sh.loanWho.trim() && !currentLoan(d) && d.status!=="wishlist"){
+    d.loans=[...(d.loans||[]), {who:sh.loanWho.trim(), out:sh.loanOut||today()}];
+  }
+  if(d.status==="wishlist"){ /* keep wishlist light */ }
+  try{ await saveGame(d); closeSheet(); toast(sh.isNew?"บันทึกเกมแล้ว":"อัปเดตแล้ว"); }catch{}
+}
+
+/* ---------- quick actions ---------- */
+function relFromAttr(s){ const [t,d,p]=s.split("|"); return {t,d,p:p.split(",")}; }
+
+async function toggleWish(r){
+  const ex=findOwnedMatch(r.t,r.p).find(g=>g.status==="wishlist");
+  if(ex){ await deleteGame(ex.id); toast("เอาออกจาก Wishlist แล้ว"); return; }
+  const g={ id:uid(), title:r.t, platform:r.p[0], status:"wishlist", releaseDate:r.d, developer:"", publisher:"", format:"disc", store:"", price:"", notes:"", loans:[] };
+  await saveGame(g); toast("เพิ่มใน Wishlist แล้ว");
+}
+
+async function markReturned(id){
+  const g=S.games.find(x=>x.id===id); if(!g) return;
+  const c=JSON.parse(JSON.stringify(g)); const l=currentLoan(c); if(!l) return;
+  l.back=today(); await saveGame(c); toast(`${g.title} กลับมาอยู่กับคุณแล้ว`);
+}
+
+async function exportJson(){
+  const data=JSON.stringify({ app:"games-library", exportedAt:new Date().toISOString(), games:S.games }, null, 2);
+  if(DOWNLOADS){ try{ await DOWNLOADS.save({ filename:`games-library-${today()}.json`, data }); toast("บันทึกไฟล์แล้ว"); return; }catch(e){ if(e&&e.code==="declined") return; } }
+  try{ await navigator.clipboard.writeText(data); toast("คัดลอกข้อมูล JSON ไว้ในคลิปบอร์ดแล้ว"); }catch{ toast("บันทึกไฟล์ไม่ได้ในหน้านี้"); }
+}
+
+/* Full backup of every collection, for moving the app to its own website */
+async function exportAll(){
+  const data=JSON.stringify({ app:"games-library", kind:"full", exportedAt:new Date().toISOString(),
+    games:S.games, rentals:S.rentals, subs:S.subs, gameinfo:S.info||{}, catalog:S.catalogDocs||{},
+    meta:{ releases:S.releases||null, top10:S.top10||null } });
+  if(DOWNLOADS){ try{ await DOWNLOADS.save({ filename:`games-library-full-${today()}.json`, data }); toast("บันทึกไฟล์แล้ว"); return; }catch(e){ if(e&&e.code==="declined") return; } }
+  toast("บันทึกไฟล์ไม่ได้ในหน้านี้");
+}
+
+/* ---------- import (Notion CSV / JSON backup) ---------- */
+function parseCSV(text){
+  text=text.replace(/^﻿/,""); const rows=[]; let row=[], f="", q=false;
+  for(let i=0;i<text.length;i++){ const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){ f+='"'; i++; } else q=false; } else f+=c; }
+    else if(c==='"') q=true; else if(c===","){ row.push(f); f=""; }
+    else if(c==="\n"||c==="\r"){ if(c==="\r"&&text[i+1]==="\n") i++; row.push(f); rows.push(row); row=[]; f=""; }
+    else f+=c; }
+  if(f!==""||row.length){ row.push(f); rows.push(row); }
+  return rows.filter(r=>r.some(x=>x.trim()!==""));
+}
+const FIELD_RULES=[
+  ["releaseDate",/release|วางจำหน่าย|วันวาง|วางขาย|ออกวาง/i],
+  ["purchaseDate",/purchase|bought|buy date|ซื้อเมื่อ|วันที่ซื้อ|วันซื้อ/i],
+  ["returned",/return|คืน/i],
+  ["borrower",/borrow|lent|lend|loan|ยืม/i],
+  ["developer",/develop|dev\b|ผู้พัฒนา|ผู้ผลิต|ผลิต/i],
+  ["publisher",/publish|ผู้จัดจำหน่าย|จัดจำหน่าย/i],
+  ["platform",/platform|console|system|เครื่อง|แพลตฟอร์ม/i],
+  ["genre",/genre|แนว|ประเภทเกม/i],
+  ["format",/format|type|media|แบบ|ประเภท|ช่องทาง/i],
+  ["store",/store|shop|ร้าน|ที่ซื้อ/i],
+  ["price",/price|cost|ราคา|baht|บาท/i],
+  ["status",/status|สถานะ|wish/i],
+  ["notes",/note|โน้ต|หมายเหตุ/i],
+  ["title",/name|title|game|ชื่อ|เกม/i],
+];
+function mapHeaders(h){
+  const used=new Set(); return h.map(col=>{ const r=FIELD_RULES.find(([f,re])=>!used.has(f)&&re.test(col)); if(r){ used.add(r[0]); return r[0]; } return null; });
+}
+function toISO(s){
+  s=String(s||"").trim(); if(!s) return "";
+  s=s.split(/→|->/)[0].trim();
+  let m=s.match(/^(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})/); if(m) return `${m[1]}-${m[2].padStart(2,"0")}-${m[3].padStart(2,"0")}`;
+  m=s.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})/); if(m){ let y=+m[3]; if(y>2400) y-=543; return `${y}-${m[2].padStart(2,"0")}-${m[1].padStart(2,"0")}`; }
+  const d=new Date(s); if(!isNaN(d)) return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+  return "";
+}
+function toPlat(s){ s=String(s||"").toLowerCase(); if(/ps|playstation/.test(s)) return "PS5"; if(/switch\s*2|ns\s*2|switch2/.test(s)) return "NS2"; if(/switch|ns|nintendo/.test(s)) return "NS1"; return "PS5"; }
+function truthy(s){ return /^(yes|true|y|✓|✔|1|คืนแล้ว|คืน|checked)$/i.test(String(s||"").trim()); }
+
+async function handleImportFile(file){
+  const text=await file.text();
+  let games=[], mapping=null;
+  if(/\.json$/i.test(file.name) || text.trim().startsWith("{")){
+    let j; try{ j=JSON.parse(text); }catch{ toast("อ่านไฟล์ JSON ไม่ได้"); return; }
+    if(j && j.kind==="full"){
+      const n=o=>Object.keys(o||{}).length;
+      S.importPreview={ name:file.name, full:j, games:(j.games||[]).filter(g=>g&&g.title),
+        summary:`เกม ${(j.games||[]).length} · เช่า ${(j.rentals||[]).length} · สมาชิก ${(j.subs||[]).length} · ข้อมูลเกม ${n(j.gameinfo)} · ปฏิทิน ${n(j.catalog)} ชุด` };
+      render(); return;
+    }
+    games=(j.games||[]).filter(g=>g&&g.title).map(g=>({...g, id:g.id||uid()}));
+  } else {
+    const rows=parseCSV(text); if(rows.length<2){ toast("ไม่พบข้อมูลในไฟล์ CSV"); return; }
+    const head=rows[0]; const map=mapHeaders(head); mapping=head.map((h,i)=>[h,map[i]&&({title:"ชื่อเกม",platform:"เครื่อง",developer:"ผู้พัฒนา",publisher:"ผู้จัดจำหน่าย",releaseDate:"วันวางจำหน่าย",genre:"แนวเกม",purchaseDate:"วันที่ซื้อ",format:"รูปแบบ",store:"ร้าน",price:"ราคา",borrower:"คนยืม",returned:"คืนแล้ว",status:"สถานะ",notes:"โน้ต"}[map[i]])]);
+    if(!map.includes("title")) map[0]="title";
+    games=rows.slice(1).map(r=>{
+      const o={}; map.forEach((f,i)=>{ if(f) o[f]=(r[i]||"").trim(); });
+      if(!o.title) return null;
+      const g={ id:uid(), title:o.title, platform:toPlat(o.platform), developer:o.developer||"", publisher:o.publisher||"",
+        releaseDate:toISO(o.releaseDate), purchaseDate:toISO(o.purchaseDate),
+        format:/digital|download|ดาวน์โหลด|ดิจิ|psn|eshop/i.test(o.format||"")?"digital":"disc",
+        store:o.store||"", price:o.price? (Number(String(o.price).replace(/[^\d.]/g,""))||"") : "",
+        status:/wish|อยาก/i.test(o.status||"")?"wishlist":"owned", notes:o.notes||"", genre:o.genre||"", loans:[] };
+      if(o.borrower && !/^(-|ไม่มี|none|no)$/i.test(o.borrower)){ g.loans=[{ who:o.borrower, out:"", ...(truthy(o.returned)?{back:today()}:{}) }]; }
+      return g;
+    }).filter(Boolean);
+  }
+  if(!games.length){ toast("ไม่พบเกมในไฟล์"); return; }
+  S.importPreview={ name:file.name, games, mapping }; render();
+}
+async function doImport(){
+  const ip=S.importPreview; if(!ip) return; let n=0;
+  const btn=document.querySelector('[data-act="doImport"]'); if(btn){ btn.disabled=true; btn.textContent="กำลังนำเข้า…"; }
+  if(ip.full){
+    if(S.mode!=="cloud"){ toast("เข้าสู่ระบบก่อนนำเข้า"); return; }
+    const j=JSON.parse(JSON.stringify(ip.full)), rows=[];
+    // Single cover files stayed in the old app; drop those links so the daily update refills them from IGDB
+    const one=c=>/^[0-9a-f]{32}$/.test(String(c||""));
+    const fix=o=>{ if(o&&one(o.coverId)) delete o.coverId; };
+    (j.games||[]).forEach(fix); (j.rentals||[]).forEach(fix); Object.values(j.gameinfo||{}).forEach(fix);
+    Object.values(j.catalog||{}).forEach(d=>(d&&d.items||[]).forEach(x=>{ if(x&&one(x.c)) delete x.c; }));
+    ((j.meta&&j.meta.releases&&j.meta.releases.items)||[]).forEach(x=>{ if(x&&one(x.c)) delete x.c; });
+    const list=(coll,arr)=>(arr||[]).forEach(x=>{ if(x&&x.id){ const {id,...data}=x; rows.push({coll,id,data}); } });
+    const map=(coll,obj)=>Object.entries(obj||{}).forEach(([id,data])=>{ if(data) rows.push({coll,id,data}); });
+    list("games",j.games); list("rentals",j.rentals); list("subs",j.subs); map("gameinfo",j.gameinfo); map("catalog",j.catalog);
+    if(j.meta&&j.meta.releases) rows.push({coll:"meta",id:"releases",data:j.meta.releases});
+    if(j.meta&&j.meta.top10) rows.push({coll:"meta",id:"top10",data:j.meta.top10});
+    try{ await DB.bulkSet(rows,(a,b)=>{ if(btn) btn.textContent=`กำลังนำเข้า ${a}/${b}`; }); S.importPreview=null; render(); toast(`นำเข้าครบแล้ว ${rows.length} รายการ`); }
+    catch(e){ if(btn){ btn.disabled=false; btn.textContent="ลองนำเข้าอีกครั้ง"; } toast("นำเข้าไม่สำเร็จ: "+(e&&e.message||"")); }
+    return;
+  }
+  for(const g of ip.games){ try{ await saveGame(g); n++; }catch{ break; } }
+  S.importPreview=null; render(); toast(`นำเข้าแล้ว ${n} เกม`);
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", async e=>{
+  if(e.target.matches("[data-lb]")){ closeShot(); return; }
+  const sl=e.target.closest("[data-sumlink]"); if(sl) S.sumView=sl.dataset.sumlink;
+  const t=e.target.closest("button,[data-scrim],.row.click"); if(!t) return;
+  if(t.dataset.act==="lbClose"){ closeShot(); return; }
+  if(t.matches("[data-scrim]")){ if(e.target===t){ closeSheet(); } return; }
+  const ds=t.dataset;
+  if(ds.dnav){ detailStep(+ds.dnav); return; }
+  if(ds.detail||ds.reldetail||ds.rentdetail){ S.detailNav = $("#app").contains(t) ? detailNavFrom(t) : null; }
+  if(t.id==="addBtn" && S.tab==="rentals"){ openRentSheet(null); return; }
+  if(t.id==="addBtn" && S.tab==="subs"){ openSubSheet(null); return; }
+  if(t.id==="addBtn"||ds.act==="add"){ openSheet(null); return; }
+  if(await rentClick(t)) return;
+  if(await subClick(t)) return;
+  if(ds.sumview){ S.sumView=ds.sumview; render(); return; }
+  if(ds.libview){ S.lib.view=ds.libview; try{ localStorage.setItem("gameslib.view",ds.libview); }catch{} render(); return; }
+  if(ds.chip){
+    const map={libPlat:["lib","plat"],libLoan:["lib","loan"],relPlat:["rel","plat"],relYear:["rel","year"],topPlat:["top","plat"]}[ds.chip];
+    S[map[0]][map[1]]=ds.v; if(map[0]==="rel") S.rel.limit=0; render(); return;
+  }
+  if(ds.job){ fireJob(ds.job, ds.jobtitle||null, ds.jobplats?ds.jobplats.split(","):null); return; }
+  if(ds.act==="cleanAsk"){ S.storage.confirm=true; render(); return; }
+  if(ds.act==="cleanNo"){ S.storage.confirm=false; render(); return; }
+  if(ds.act==="cleanGo"){ cleanStorage(); return; }
+  if(ds.topkind){ S.top.kind=ds.topkind; render(); return; }
+  if(ds.relwhen){ S.rel.when=ds.relwhen; S.rel.limit=0; render(); return; }
+  if(ds.act==="relMore"){ S.rel.limit=(S.rel.limit||150)+150; render(); return; }
+  if(ds.edit){ const g=S.games.find(x=>x.id===ds.edit); if(g) openSheet(g); return; }
+  if(ds.detail){ openDetail({gameId:ds.detail}); return; }
+  if(ds.reldetail){ openDetail({rel:relFromAttr(ds.reldetail)}); return; }
+  if(S.detail && ds.act==="dEdit"){ const g=S.games.find(x=>x.id===S.detail.gameId); if(g) openSheet(g); return; }
+  if(S.detail && ds.act==="dAi"){ detailAi(); return; }
+  if(S.detail && ds.act==="close"){ closeSheet(); return; }
+  if(ds.return){ t.disabled=true; await markReturned(ds.return); return; }
+  if(ds.wish){ t.disabled=true; try{ await toggleWish(relFromAttr(ds.wish)); }catch{} t.disabled=false; return; }
+  if(ds.bought){
+    const r=relFromAttr(ds.bought);
+    const wish=findOwnedMatch(r.t,r.p).find(g=>g.status==="wishlist");
+    openSheet(wish? {...wish} : { title:r.t, platform:r.p[0], releaseDate:r.d, ...(r.p.includes("NS1")&&r.p.includes("NS2")?{both:true}:{}) }, {markBought:true});
+    return;
+  }
+  if(ds.buywish){ const g=S.games.find(x=>x.id===ds.buywish); if(g) openSheet({...g},{markBought:true}); return; }
+  if(ds.act==="export"){ exportJson(); return; }
+  if(ds.act==="exportAll"){ exportAll(); return; }
+  if(ds.act==="logout"){ window.GL_BACKEND.auth.signOut(); return; }
+  if(ds.act==="doImport"){ doImport(); return; }
+  if(ds.act==="cancelImport"){ S.importPreview=null; render(); return; }
+  if(!S.sheet) return;
+  const sh=S.sheet;
+  if(ds.seg){ pullForm(); sh.draft[ds.seg]= ds.seg==="both" ? ds.v==="1" : ds.v;
+    if(ds.seg==="platform" && ds.v==="PS5") delete sh.draft.both;
+    if(ds.seg==="platform" && ds.v!=="NS2" && /switch 2 edition/i.test(sh.draft.title||"")){ sh.draft.title=sh.draft.title.replace(/\s*[–—:-]?\s*(nintendo )?switch 2 edition/i,"").trim(); sh.draft.releaseDate=""; applyReleaseMatch(sh.draft); } if(ds.seg==="status"&&ds.v==="owned"&&!sh.draft.purchaseDate) sh.draft.purchaseDate=today(); renderSheet(); return; }
+  switch(ds.act){
+    case "close": closeSheet(); break;
+    case "allPlats": pullForm(); sh.allPlats=true; renderSheet(); break;
+    case "useRelease": pullForm(); if(!sh.draft.releaseDate) applyReleaseMatch(sh.draft);
+      if(sh.draft.releaseDate){ sh.draft.purchaseDate=sh.draft.releaseDate; sh.draft.purchaseApprox=true; renderSheet(); toast("ใช้วันวางจำหน่ายเป็นวันที่ซื้อแล้ว"); }
+      else { toast("ยังไม่รู้วันวางจำหน่าย ใส่วันวางจำหน่ายหรือกด เติมข้อมูล ก่อน"); $("#f-releaseDate")?.focus(); } break;
+    case "save": t.disabled=true; await saveSheet(); if(S.sheet) t.disabled=false; break;
+    case "ai": aiFill(); break;
+    case "lend": pullForm(); if(!sh.loanWho.trim()){ toast("ใส่ชื่อคนยืมก่อน"); $("#f-loanWho")?.focus(); break; }
+      sh.draft.loans=[...(sh.draft.loans||[]),{who:sh.loanWho.trim(),out:sh.loanOut||today()}]; sh.loanWho=""; renderSheet(); toast("บันทึกการยืมแล้ว กด “บันทึก” เพื่อยืนยัน"); break;
+    case "returned": pullForm(); { const l=currentLoan(sh.draft); if(l) l.back=today(); } renderSheet(); break;
+    case "cancelLoan": pullForm(); { const l=currentLoan(sh.draft); sh.draft.loans=sh.draft.loans.filter(x=>x!==l); } renderSheet(); break;
+    case "delete": pullForm(); S.confirmDelete=true; renderSheet(); break;
+    case "noDelete": S.confirmDelete=false; renderSheet(); break;
+    case "reallyDelete": t.disabled=true; try{ await deleteGame(sh.draft.id); closeSheet(); toast("ลบแล้ว"); }catch(e){ t.disabled=false; toast("ลบไม่สำเร็จ ลองอีกครั้ง"); } break;
+  }
+});
+document.addEventListener("input", e=>{
+  if(e.target.id==="libQ"){ S.lib.q=e.target.value; clearTimeout(S._qt); S._qt=setTimeout(render,180); }
+  if(e.target.id==="f-title" && S.sheet){ const dl=$("#dl-rel"); if(dl) dl.innerHTML=titleOptions(e.target.value,S.sheet.draft.platform); }
+  if(e.target.id==="sf-start" && S.subSheet){ pullSubForm(); const c=$("#subCalc"); if(c) c.innerHTML=subCalcHTML(S.subSheet.draft); }
+  if(e.target.id==="rf-title" && S.rentSheet){ const dl=$("#dl-rent"); if(dl) dl.innerHTML=titleOptions(e.target.value,S.rentSheet.draft.platform); }
+  if(["rf-start","rf-due","rf-back"].includes(e.target.id) && S.rentSheet){ pullRentForm(); const c=$("#rentCalc"); if(c) c.innerHTML=rentCalcHTML(S.rentSheet.draft); }
+  if(e.target.id==="relQ"){ S.rel.q=e.target.value; S.rel.limit=0; clearTimeout(S._qt); S._qt=setTimeout(render,250); }
+});
+document.addEventListener("change", e=>{
+  if(e.target.id==="libSort"){ S.lib.sort=e.target.value; render(); }
+  if(e.target.id==="libGenre"){ S.lib.genre=e.target.value; render(); }
+  if(e.target.id==="relGenre"){ S.rel.genre=e.target.value; S.rel.limit=0; render(); }
+  if(e.target.id==="importFile" && e.target.files[0]){ handleImportFile(e.target.files[0]); }
+  if(e.target.id==="coverFile" && e.target.files[0]){ uploadCover(e.target.files[0]); }
+  if(e.target.id==="f-purchaseDate" && S.sheet){ S.sheet.draft.purchaseApprox=false; }
+  if(e.target.id==="f-title" && S.sheet){ pullForm(); const d=S.sheet.draft; applyReleaseMatch(d);
+    ["releaseDate","developer","publisher"].forEach(k=>{ const el=$("#f-"+k); if(el && !el.value && d[k]) el.value=d[k]; });
+    const gb=$("#genreBox"); if(gb) gb.innerHTML=genreBoxHTML(d);
+    const before=d.platform; const pb=$("#platBox"); const ph=platBoxHTML(); if(pb && pb.innerHTML!==ph) pb.innerHTML=ph;
+    if(d.platform!==before){ d.releaseDate=""; applyReleaseMatch(d); const fr=$("#fmtBox"); if(fr) fr.innerHTML=fmtSegHTML(d);
+      ["releaseDate","developer","publisher"].forEach(k=>{ const el=$("#f-"+k); if(el && d[k]) el.value=d[k]; }); if(gb) gb.innerHTML=genreBoxHTML(d); } }
+});
+document.addEventListener("keydown", e=>{ if(S.detail&&S.detailNav&&(e.key==="ArrowLeft"||e.key==="ArrowRight")&&!/INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName||"")){ detailStep(e.key==="ArrowRight"?1:-1); return; } if(e.key==="Escape"){ if($("#lbRoot")?.innerHTML){ closeShot(); return; } if(S.sheet||S.detail||S.subSheet||S.rentSheet) closeSheet(); } });
+
+try{ const hd=document.querySelector("header.top"); const setH=()=>document.documentElement.style.setProperty("--head-h",hd.offsetHeight+"px"); setH(); new ResizeObserver(setH).observe(hd); }catch{}
+readHash();
+boot();
+})();
+</script>
+</body></html>

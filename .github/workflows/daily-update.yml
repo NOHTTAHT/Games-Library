@@ -1,0 +1,27 @@
+name: Daily update (IGDB + Wikipedia)
+
+on:
+  schedule:
+    - cron: "0 5 * * *"   # 05:00 UTC = 12:00 Bangkok, every day
+  workflow_dispatch: {}     # "Run workflow" button for an update right now
+
+concurrency:
+  group: daily-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Update calendar, covers and Top 10
+        env:
+          SUPABASE_URL: https://hkjgrhlleqkzstvtfgst.supabase.co
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+          TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+        run: python tools/daily.py "$RUNNER_TEMP/daily"
