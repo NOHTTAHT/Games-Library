@@ -111,23 +111,27 @@ tried = state.get("tried", {})
 retry_before = (datetime.date.today() - datetime.timedelta(days=30)).isoformat()
 cat = supa.list_docs("catalog")
 games = supa.list_docs("games"); info = supa.list_docs("gameinfo")
+rentals = supa.list_docs("rentals")
 have_cover = {app_norm(x["t"]) for d in cat.values() for x in d.get("items", []) if x.get("c")}
 # COVERS=all (the "Run workflow" option) looks up every missing cover, stopping in time to save; otherwise 900 a day
 ALL = os.environ.get("COVERS") == "all"
 LIMIT = 10**9 if ALL else 900; STOP_AT = time.time() + 140 * 60; done = 0; found = 0
 def full(): return done >= LIMIT or time.time() > STOP_AT
-# a) the owner's games first
-info_patch = {}
-for gid, g in games.items():
+# a) the owner's games and rentals first
+info_patch = {}; mine_log = []
+for gid, g in list(games.items()) + [("r:" + k, v) for k, v in rentals.items()]:
     t = g.get("title") or ""; k = info_key(t)
-    if not t or g.get("coverId") or (info.get(k) or {}).get("coverId") or app_norm(t) in have_cover: continue
-    if tried.get("g:" + k, "") > retry_before or full(): continue
+    if not t or g.get("coverId") or (info.get(k) or {}).get("coverId") or (info_patch.get(k) or {}).get("coverId") or app_norm(t) in have_cover: continue
+    if (tried.get("g:" + k, "") > retry_before and not ALL) or full():
+        mine_log.append(f"  {t}: skipped (looked up on {tried.get('g:' + k, '-')})"); continue
     c = find_cover(t); done += 1
+    mine_log.append(f"  {t}: {c or ('no answer' if c is None else 'not found')}")
     if c is None: continue
     tried["g:" + k] = TODAY
     if c:
         found += 1; d = dict(info.get(k) or {}); d.update({"title": t, "coverId": c, "updatedAt": TODAY}); info_patch[k] = d
 if info_patch: supa.set_docs("gameinfo", info_patch)
+print("your games/rentals without a cover:", len(mine_log), *mine_log, sep="\n", flush=True)
 # b) the release calendar, newest years first
 cat_patch = {}
 for doc_id in sorted(cat, key=lambda k: re.sub(r"\D", "", k)[:4], reverse=True):
