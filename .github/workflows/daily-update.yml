@@ -26,7 +26,7 @@ jobs:
           python-version: "3.12"
       - name: Install packages
         run: pip install beautifulsoup4 lxml
-      - name: Update calendar, covers and Top 10
+      - name: Update calendar, covers and Top 100
         env:
           SUPABASE_URL: https://hkjgrhlleqkzstvtfgst.supabase.co
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}

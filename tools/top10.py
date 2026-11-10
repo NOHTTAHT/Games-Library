@@ -1,5 +1,5 @@
 # top10.py <out.json>
-# Weekly "Top 10" per console for the Games Library app (doc meta/top10).
+# Daily "Top 100" per console for the Games Library app (doc meta/top10; the id is kept from the Top 10 days).
 # Source: IGDB (needs env TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET).
 #  hot   = new games (first released in the last 365 days), ranked by IGDB popularity now (Visits + Playing + Want to Play, rank-blended)
 #  rated = new games (first released in the last 365 days), ranked by critic score (aggregated_rating, >= 3 critic reviews)
@@ -15,7 +15,8 @@ def ig(ep,body):
         except Exception: time.sleep(2*(t+1))
     raise SystemExit("IGDB_FAILED "+ep)
 PL={"PS5":167,"NS2":508,"NS1":130}
-F="fields name,first_release_date,aggregated_rating,aggregated_rating_count,total_rating,genres.name,involved_companies.publisher,involved_companies.developer,involved_companies.company.name,platforms,game_type,release_dates.platform,release_dates.date;"
+TOP=100
+F="fields name,cover.image_id,first_release_date,aggregated_rating,aggregated_rating_count,total_rating,genres.name,involved_companies.publisher,involved_companies.developer,involved_companies.company.name,platforms,game_type,release_dates.platform,release_dates.date;"
 now=int(time.time()); since=now-365*86400
 def plat_date(g,p):
     ds=[r["date"] for r in g.get("release_dates") or [] if r.get("platform")==p and r.get("date")]
@@ -28,19 +29,20 @@ def item(g,p,extra):
     it={"t":g["name"],"id":g["id"],"d":datetime.datetime.fromtimestamp(d,datetime.timezone.utc).strftime("%Y-%m-%d") if d else "",
         "g":", ".join(x["name"] for x in (g.get("genres") or [])[:2]),"pub":pub or dev}
     if g.get("aggregated_rating"): it["score"]=round(g["aggregated_rating"])
+    if (g.get("cover") or {}).get("image_id"): it["c"]="ig:"+g["cover"]["image_id"]
     it.update(extra); return it
 # popularity: rank-blend three IGDB signals
 rank={}
 for t in (1,3,2):
     rows=[]
-    for off in (0,500,1000,1500):
+    for off in range(0,5000,500):  # deep pool so each console can fill 100 new games
         rows+=ig("popularity_primitives",f"fields game_id,value; where popularity_type={t}; sort value desc; limit 500; offset {off};")
     for i,r in enumerate(rows): rank.setdefault(r["game_id"],0); rank[r["game_id"]]+=1/(i+20)
 ids=sorted(rank); G={}
 for i in range(0,len(ids),400):
     for g in ig("games",F+f"where id=({','.join(map(str,ids[i:i+400]))}); limit 500;"): G[g["id"]]=g
 OK_TYPES={0,8,9,10,11}  # main game, remake, remaster, expanded game, port
-out={"updatedAt":datetime.date.today().isoformat(),"source":"IGDB","lists":{}}
+out={"updatedAt":datetime.date.today().isoformat(),"source":"IGDB","size":TOP,"lists":{}}
 for k,p in PL.items():
     hot=[]
     for gid in sorted(rank,key=lambda x:-rank[x]):
@@ -49,14 +51,14 @@ for k,p in PL.items():
         d=g.get("first_release_date")
         if not d or d<since or d>now: continue
         hot.append(item(g,p,{}))
-        if len(hot)==10: break
-    cand=ig("games",F+f"where platforms=({p}) & aggregated_rating_count>=3 & aggregated_rating!=null & game_type=({','.join(map(str,OK_TYPES))}) & first_release_date>={since} & first_release_date<={now}; sort aggregated_rating desc; limit 80;")
+        if len(hot)==TOP: break
+    cand=ig("games",F+f"where platforms=({p}) & aggregated_rating_count>=3 & aggregated_rating!=null & game_type=({','.join(map(str,OK_TYPES))}) & first_release_date>={since} & first_release_date<={now}; sort aggregated_rating desc; limit 500;")
     rated=[]
     for g in cand:
         rated.append(item(g,p,{"n":g.get("aggregated_rating_count",0)}))
-        if len(rated)==10: break
+        if len(rated)==TOP: break
     out["lists"][k]={"hot":hot,"rated":rated}
 json.dump(out,open(sys.argv[1],"w"),ensure_ascii=False,indent=1)
 for k,v in out["lists"].items():
-    print(k,"HOT:",", ".join(x["t"] for x in v["hot"]))
-    print(k,"RATED:",", ".join(f'{x["t"]} {x.get("score")}' for x in v["rated"]))
+    print(k,"HOT",len(v["hot"]),":",", ".join(x["t"] for x in v["hot"][:10]),"...")
+    print(k,"RATED",len(v["rated"]),":",", ".join(f'{x["t"]} {x.get("score")}' for x in v["rated"][:10]),"...")
