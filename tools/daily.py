@@ -1,4 +1,4 @@
-# Daily update (GitHub Actions, 12:00 Bangkok): release calendar (Wikipedia + IGDB), missing covers (IGDB), Top 10 (IGDB).
+# Daily update (GitHub Actions, 12:00 Bangkok): release calendar (Wikipedia + IGDB), missing covers (IGDB), Top 100 (IGDB).
 # Env: SUPABASE_URL, SUPABASE_SECRET_KEY, TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET
 import datetime, glob, json, os, re, shutil, subprocess, sys, time, unicodedata, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
@@ -150,7 +150,7 @@ if cat_patch: supa.set_docs("catalog", cat_patch)
 supa.set_docs("meta", {"coverfill": {"tried": tried, "updatedAt": TODAY}})
 report.append(f"covers: looked up {done}, found {found}")
 
-# ---------- 3) Top 10 ----------
+# ---------- 3) Top 100 per console (doc meta/top10) ----------
 r = run(f"{HERE}/top10.py", f"{W}/top10.json")
 if r.returncode == 0 and os.path.exists(f"{W}/top10.json"):
     t10 = json.load(open(f"{W}/top10.json"))
