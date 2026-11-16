@@ -1,4 +1,4 @@
-# Temporary probe round 2
+# Temporary probe round 3
 import json, re, urllib.request, urllib.parse
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36",
       "Accept-Language": "en-TH,en;q=0.9"}
@@ -10,66 +10,49 @@ def get(u, h=None):
         return e.code, e.read().decode("utf-8", "replace")[:500]
     except Exception as e:
         return 0, repr(e)
-def nd(h):
-    m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', h, re.S)
-    return json.loads(m.group(1)) if m else None
-# 1) concept page: what price/offer fields exist
-s, h = get("https://store.playstation.com/en-th/concept/10002456")
-d = nd(h); st = (d or {}).get("props", {}).get("apolloState", {})
-print("== concept apollo types", sorted({v.get("__typename") for v in st.values() if isinstance(v, dict)}))
-for k, v in list(st.items()):
-    if isinstance(v, dict) and v.get("__typename") in ("Product", "Concept"):
-        print(k, json.dumps(v)[:1500]); 
-for m in set(re.findall(r'"(endTime|startTime|endDate|offerEndTime|discountText|campaignId)":"?([^",}]*)', h)):
-    print(" field", m)
-# 2) deals page -> category links
-s, h = get("https://store.playstation.com/en-th/pages/deals")
-print("== deals", s, len(h))
-cats = sorted(set(re.findall(r'/en-th/category/([0-9a-f-]{36})', h)))
-print("categories", cats[:30])
-for m in re.findall(r'"name":"([^"]{3,60})"[^{}]{0,200}?"categoryId":"([0-9a-f-]{36})"', h)[:30]:
-    print(" ", m)
-# 3) a category page SSR?
-for c in cats[:3]:
-    s, h = get(f"https://store.playstation.com/en-th/category/{c}/1")
-    d = nd(h); st = (d or {}).get("props", {}).get("apolloState", {})
-    prods = [v for v in st.values() if isinstance(v, dict) and v.get("__typename") == "Product"]
-    print("== category", c, s, len(h), "products", len(prods))
-    for v in prods[:3]: print("  ", json.dumps(v)[:700])
-    grids = [ (k, {kk: vv for kk, vv in v.items() if kk not in ("products", "concepts")}) for k, v in st.items() if isinstance(v, dict) and v.get("__typename") == "CategoryGrid"]
-    for g in grids[:2]: print("  grid", json.dumps(g)[:600])
-    print("  title", re.findall(r"<title>(.*?)</title>", h)[:1])
-# 4) GraphQL persisted queries (known hashes; may be stale)
 G = "https://web.np.playstation.com/api/graphql/v1/op"
-hd = {"x-psn-store-locale-override": "en-TH", "content-type": "application/json", "Origin": "https://store.playstation.com"}
-tests = {
- "categoryGridRetrieve": ({"id": cats[0] if cats else "", "pageArgs": {"size": 5, "offset": 0}, "sortBy": None, "filterBy": [], "facetOptions": []}, "4ce7d410a4db2c8b635a48c1dcec375906ff63b19dadd87e073f8fd0c0481d35"),
- "getSearchResults": ({"searchTerm": "elden ring", "pageOffset": 0, "pageSize": 5}, "a2fbc15433b37ca7bfcd7112f741735e13268f5e9ebd5ffce51b85acc126f41a"),
- "metGetPricingDataByConceptId": ({"conceptId": "10002456"}, "abcb311ea830e679fe2b697a27f755764535d825b24510ab1239a4ca3092bd09"),
-}
-for op, (var, hsh) in tests.items():
+HD = {"x-psn-store-locale-override": "en-TH", "content-type": "application/json"}
+def gql(op, var, hsh):
     u = G + "?" + urllib.parse.urlencode({"operationName": op, "variables": json.dumps(var), "extensions": json.dumps({"persistedQuery": {"version": 1, "sha256Hash": hsh}})})
-    s, h = get(u, hd)
-    print("== gql", op, s, h[:900])
-# 5) find hashes in JS bundles
-s, h = get("https://store.playstation.com/en-th/search/elden%20ring")
-srcs = re.findall(r'src="(/_next/static/[^"]+\.js)"', h) + re.findall(r'src="(https://[^"]+\.js)"', h)
-print("== scripts", len(srcs))
-found = set()
-for src in srcs:
-    u = src if src.startswith("http") else "https://store.playstation.com" + src
-    s, js = get(u)
-    for m in re.finditer(r'(getSearchResults|categoryGridRetrieve|searchFor\w*|metGetPricing\w*)[^;]{0,300}?([0-9a-f]{64})', js):
-        found.add((m.group(1), m.group(2)))
-    if "sha256Hash" in js: print("  sha in", u[-60:])
-print(found)
-# 6) Nintendo HK: list entries with sale + price API
-s, h = get("https://www.nintendo.com.hk/data/json/switch_software.json")
-lst = json.loads(h); print("== HK list", len(lst), "keys", list(lst[0]))
-sale = [x for x in lst if x.get("sale_until")]
-print("on sale entries", len(sale), [ (x["title"], x["sale_until"], x["thumb_img"]) for x in sale[:5]])
-ids = [re.sub(r"\D", "", x["thumb_img"]) for x in (sale[:5] + lst[:5]) if re.match(r"7001\d+", x.get("thumb_img", ""))]
-s, h = get("https://api.ec.nintendo.com/v1/price?country=HK&lang=en&ids=" + ",".join(ids))
-print("HK price", s, h[:1500])
-s, h = get("https://api.ec.nintendo.com/v1/price?country=TH&lang=en&ids=" + ",".join(ids))
-print("TH price", s, h[:300])
+    return get(u, HD)
+CG = "4ce7d410a4db2c8b635a48c1dcec375906ff63b19dadd87e073f8fd0c0481d35"
+s, h = gql("metGetPricingDataByConceptId", {"conceptId": "10002456"}, "abcb311ea830e679fe2b697a27f755764535d825b24510ab1239a4ca3092bd09")
+d = json.loads(h); 
+def strip(o):
+    if isinstance(o, dict): return {k: strip(v) for k, v in o.items() if k not in ("mobilectas", "param", "__typename")}
+    if isinstance(o, list): return [strip(x) for x in o]
+    return o
+print("== pricing", json.dumps(strip(d))[:2500])
+s, h = get("https://store.playstation.com/en-th/pages/deals")
+ids = sorted(set(re.findall(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}', h)))
+print("== deals uuids", len(ids), re.findall(r'href="(/en-th/[^"]+)"', h)[:40])
+cands = ids + ["4cbf39e2-5749-4970-ba81-93a489e4570c", "d0446d4b-dc9a-4f1e-86ec-651f099c9b29", "3f772501-f6f8-49b7-abac-874a88ca4897", "803cee19-e5a1-4d59-a463-0b6b2701bf7c"]
+for c in cands:
+    s, h = gql("categoryGridRetrieve", {"id": c, "pageArgs": {"size": 3, "offset": 0}, "sortBy": None, "filterBy": [], "facetOptions": []}, CG)
+    try:
+        g = json.loads(h)["data"]["categoryGridRetrieve"]
+    except Exception:
+        g = None
+    if g:
+        print("== cat", c, g.get("name"), "total", (g.get("pageInfo") or {}).get("totalCount"))
+        for p in g.get("products", [])[:2]:
+            print("   ", json.dumps(strip(p))[:900])
+    else:
+        print("   cat", c, s, h[:120])
+# big page size
+s, h = gql("categoryGridRetrieve", {"id": "4cbf39e2-5749-4970-ba81-93a489e4570c", "pageArgs": {"size": 1000, "offset": 0}, "sortBy": None, "filterBy": [], "facetOptions": []}, CG)
+try: print("== size1000", len(json.loads(h)["data"]["categoryGridRetrieve"]["products"]), len(h))
+except Exception as e: print("== size1000 fail", s, h[:200])
+# Nintendo ec search endpoints
+for u in ["https://ec.nintendo.com/api/HK/zh/search/sales?count=5&offset=0",
+          "https://ec.nintendo.com/api/HK/en/search/sales?count=5&offset=0",
+          "https://ec.nintendo.com/api/HK/zh/search/new?count=5&offset=0",
+          "https://ec.nintendo.com/api/JP/ja/search/sales?count=3&offset=0",
+          "https://ec.nintendo.com/api/HK/zh/search/?q=mario&count=3",
+          "https://www.dekudeals.com/games?country=hk&filter[store]=eshop",
+          "https://psprices.com/region-th/collection/most-wanted-deals?platform=PS5"]:
+    s, h = get(u)
+    print("==", u, s, len(h), h[:700].replace("\n", " "))
+ids = "70010000050752,70010000096809,70010000060917"
+s, h = get("https://api.ec.nintendo.com/v1/price?country=HK&lang=en&ids=" + ids)
+print("HK price", s, h[:800])
