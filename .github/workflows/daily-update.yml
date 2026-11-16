@@ -1,4 +1,4 @@
-name: Daily update (IGDB + Wikipedia)
+name: Daily update (IGDB + Wikipedia + Thai store prices)
 
 on:
   schedule:
@@ -34,3 +34,17 @@ jobs:
           TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
           COVERS: ${{ inputs.covers }}
         run: python tools/daily.py "$RUNNER_TEMP/daily"
+
+  prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Thai store prices and sales (PlayStation Store TH)
+        env:
+          SUPABASE_URL: https://hkjgrhlleqkzstvtfgst.supabase.co
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+        run: python tools/prices.py

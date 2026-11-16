@@ -55,3 +55,13 @@ def set_docs(coll, docs):
 def delete_doc(coll, id):
     q = urllib.parse.urlencode({"coll": "eq." + coll, "id": "eq." + id})
     _req("DELETE", f"{URL}?{q}", headers={"Prefer": "return=minimal"})
+
+def list_ids(coll):
+    out, off = set(), 0
+    while True:
+        q = urllib.parse.urlencode({"coll": "eq." + coll, "select": "id", "order": "id"})
+        rows = _req("GET", f"{URL}?{q}", headers={"Range": f"{off}-{off + 999}", "Range-Unit": "items"})
+        out |= {r["id"] for r in rows}
+        if len(rows) < 1000:
+            return out
+        off += 1000

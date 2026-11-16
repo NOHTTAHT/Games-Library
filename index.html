@@ -122,6 +122,9 @@ select.sel{border:1px solid var(--line);background:var(--surface);border-radius:
 .pill{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
 .pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
 .pill.soft{background:var(--surface-2);color:var(--muted);font-weight:500;border:1px solid var(--line)}
+.pill.sale{background:color-mix(in srgb,var(--danger) 13%,var(--surface));color:var(--danger);font-family:var(--f-mono)}
+.salerow{text-decoration:none;color:inherit} .salerow s{color:var(--muted);font-size:12px} .salerow .soon{color:var(--danger);font-weight:600}
+.pricehint{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px} .pricehint s{color:var(--muted)}
 .ptag{display:inline-block;border-radius:5px;padding:1px 6px;font-size:11px;font-weight:700;font-family:var(--f-display);letter-spacing:.04em;color:#fff}
 .ptag.PS5{background:var(--ps)} .ptag.NS1{background:#fff;color:var(--ns1);box-shadow:inset 0 0 0 1.5px var(--ns1)} .ptag.NS2{background:var(--ns2)}
 .n2{margin-left:.2em;font-weight:800;color:inherit}
@@ -474,13 +477,14 @@ button.month-h.mfold{display:flex;width:100%;border:0;color:inherit;cursor:point
 const PLAT = { PS5:{label:"PS5"}, NS2:{label:"Switch 2"}, NS1:{label:"Switch 1"} };
 const PLAT_ORDER = ["PS5","NS2","NS1"];
 const DEFAULT_STORES = ["PlayStation Store","Nintendo eShop"];
-const TABS = ["library","rentals","loans","releases","wishlist","top10","summary","subs"];
+const TABS = ["library","rentals","loans","releases","wishlist","top10","sales","summary","subs"];
 
 const S = {
   mode:"connecting", games:[], releases:null, loaded:false,
   tab:"library",
   lib:{q:"",plat:"all",loan:"all",sort:"bought",genre:"",view:(()=>{ try{ return localStorage.getItem("gameslib.view")==="list"?"list":"grid"; }catch{ return "grid"; } })()},
   rel:{when:"upcoming",plat:"all",q:"",year:"",genre:""}, catalog:[], top10:null, top:{plat:"PS5",kind:"hot",n:25},
+  ps:{map:new Map(), sales:[], meta:null}, sale:{plat:"PS5",sort:"pct",q:"",wish:false,n:40},
   jobs:{}, jobBusy:"", subs:[], subSheet:null, rentals:[], rentSheet:null, sheet:null, detail:null, info:{}, confirmDelete:false, importPreview:null,
 };
 let DB=null, SAMPLE=null, DOWNLOADS=null, ASSETS=null, MCP=null;
@@ -563,6 +567,7 @@ async function boot(){
   DB.collection("gameinfo").onSnapshot(snap=>{
     const m={}; snap.docs.forEach(d=>{ m[d.id]=d.data(); }); S.info=m; render();
   }, ()=>{});
+  DB.collection("prices").onSnapshot(snap=>{ buildPrices(snap.docs.map(d=>({id:d.id, data:d.data()}))); render(); }, ()=>{});
   DB.doc("meta/jobs").onSnapshot(snap=>{ S.jobs=snap.exists?snap.data():{}; render(); }, ()=>{});
 }
 function viewLogin(){
@@ -593,7 +598,7 @@ window.addEventListener("hashchange",()=>{ readHash(); render(); const sc=docume
 /* ---------- render ---------- */
 function render(){
   setSync();
-  const navTab = (S.tab==="rentals"||S.tab==="loans") ? "library" : (S.tab==="wishlist"||S.tab==="top10") ? "releases" : S.tab;
+  const navTab = (S.tab==="rentals"||S.tab==="loans") ? "library" : (S.tab==="wishlist"||S.tab==="top10"||S.tab==="sales") ? "releases" : S.tab;
   document.querySelectorAll("nav.tabs a").forEach(a=>{ a.toggleAttribute("aria-current", a.dataset.tab===navTab); if(a.dataset.tab===navTab) a.setAttribute("aria-current","page"); });
   const lent = owned().filter(currentLoan).length;
   const b=$("#loanBadge"); if(b){ b.hidden = !lent; b.textContent = lent; }
@@ -603,7 +608,7 @@ function render(){
   if(S.mode==="login"){ if(!app.querySelector("#loginForm")) app.innerHTML=viewLogin(); return; }
   if(!S.loaded){ app.innerHTML = `<section class="view"><div class="empty"><b>กำลังโหลดคลังเกม…</b><span>ข้อมูลซิงก์ทุกเครื่องที่เข้าสู่ระบบบัญชีเดียวกัน</span></div></section>`; return; }
   if(S.detail) renderDetail();
-  const v = { library:viewLibrary, loans:viewLoans, releases:viewReleases, wishlist:viewWishlist, top10:viewTop10, summary:viewSummary, subs:viewSubs, rentals:viewRentals }[S.tab];
+  const v = { library:viewLibrary, loans:viewLoans, releases:viewReleases, wishlist:viewWishlist, top10:viewTop10, sales:viewSales, summary:viewSummary, subs:viewSubs, rentals:viewRentals }[S.tab];
   const html=v(); const ae=document.activeElement;
   if(ae && ae.id && ae.tagName==="INPUT" && app.contains(ae)) patchApp(app, html, ae); else app.innerHTML = html;
 }
@@ -697,7 +702,7 @@ function libHero(list,total,all){
 
 function planTabs(cur){
   const n=wishlist().length;
-  return `<div class="ptabs" role="tablist"><a href="#releases" role="tab" aria-selected="${cur==="releases"}">กำหนดการ</a><a href="#wishlist" role="tab" aria-selected="${cur==="wishlist"}">Wishlist${n?` <span>${n}</span>`:""}</a><a href="#top10" role="tab" aria-selected="${cur==="top10"}">Top 100</a></div>`;
+  return `<div class="ptabs" role="tablist"><a href="#releases" role="tab" aria-selected="${cur==="releases"}">กำหนดการ</a><a href="#wishlist" role="tab" aria-selected="${cur==="wishlist"}">Wishlist${n?` <span>${n}</span>`:""}</a><a href="#top10" role="tab" aria-selected="${cur==="top10"}">Top 100</a><a href="#sales" role="tab" aria-selected="${cur==="sales"}">Sales${S.ps.sales.length?` <span>${S.ps.sales.length>999?"999+":S.ps.sales.length}</span>`:""}</a></div>`;
 }
 
 function viewToggle(v){
@@ -817,7 +822,7 @@ function viewReleases(){
     const wd=d.toLocaleDateString("th-TH",{weekday:"short"});
     const cov=r.c||infoOf(r.t)?.coverId||coverOf(r.t,has||wish)||"";
     return `<div class="row click" data-reldetail="${esc(r.t)}|${r.d}|${r.p.join(",")}"><div class="day">${d.getDate()}<small>${wd}</small></div>${thumbHTML(r.t,r.p[0],cov,"rthumb")}
-      <div class="grow"><div class="t">${esc(r.t)}</div><div class="s" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:2px">${r.ps4?PS4TAG:r.p.map(platTag).join("")}${r.pub||r.dev?` <span>${esc(r.pub||r.dev)}</span>`:""}${r.g?` <span>· ${esc(splitGenres(r.g).slice(0,2).join(", "))}</span>`:""}${has?` <span class="pill ok">มีแล้ว</span>`:""}${rentTag(r.t)}</div></div>
+      <div class="grow"><div class="t">${esc(r.t)}</div><div class="s" style="display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:2px">${r.ps4?PS4TAG:r.p.map(platTag).join("")}${r.pub||r.dev?` <span>${esc(r.pub||r.dev)}</span>`:""}${r.g?` <span>· ${esc(splitGenres(r.g).slice(0,2).join(", "))}</span>`:""}${has?` <span class="pill ok">มีแล้ว</span>`:""}${r.d<=today()?pricePill(r.t,r.p):""}${rentTag(r.t)}</div></div>
       <div class="rowbtns">
         <button class="btn small heart" data-wish="${esc(r.t)}|${r.d}|${r.p.join(",")}" aria-pressed="${!!wish}" aria-label="Wishlist">${wish?"♥":"♡"}</button>
         ${r.d<=today()?rentBtn(r.t,"rentrel",`${r.t}|${r.d}|${r.p.join(",")}`,"btn small"):""}<button class="btn small" data-bought="${esc(r.t)}|${r.d}|${r.p.join(",")}">ซื้อ</button>
@@ -836,6 +841,82 @@ function viewReleases(){
     ${groups.length? (groups.length>1?`<div class="tools" style="justify-content:flex-end;margin-bottom:-6px"><button type="button" class="btn small ghost" data-relfoldall="${groups.every(g=>relFolded(R.when,g.k))?"0":"1"}" data-relkeys="${groups.map(g=>g.k).join(",")}">${groups.every(g=>relFolded(R.when,g.k))?"แสดงทุกเดือน":"ซ่อนทุกเดือน"}</button></div>`:"") + groups.map(g=>{ const f=relFolded(R.when,g.k); return `<div><button type="button" class="month-h mfold" data-relfold="${g.k}" aria-expanded="${!f}">${monthName(g.k+"-01")}<span>${g.items.length} เกม<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 9l6 6 6-6"/></svg></span></button>${f?"":`<div class="list">${g.items.map(rowHtml).join("")}</div>`}</div>`; }).join("") + (total>shown.length?`<button class="btn" style="width:100%;margin-top:12px" data-act="relMore">แสดงเพิ่มอีก ${Math.min(150,total-shown.length)} เกม</button>`:"") : `<div class="empty"><b>ไม่พบเกมในช่วงนี้</b></div>`}
     ${MCP?`<div class="panel"><h3 class="st" style="margin:0">อัปเดตกำหนดการ</h3><div class="sub">อัปเดตอัตโนมัติทุกวันจันทร์ 05:13 น. ถ้าอยากได้ข้อมูลล่าสุดตอนนี้ กดปุ่มด้านล่าง</div><div class="tools">${jobButton("sync",null,null,"อัปเดตตอนนี้")}</div></div>`:""}
     <p class="src">ข้อมูลวันวางจำหน่ายรวบรวมจาก ${esc(S.releases.source||"เว็บข่าวเกม")} · อัปเดต ${fmtDate(S.releases.updatedAt)} · วันวางขายอาจเปลี่ยนตามผู้จัดจำหน่าย</p>
+  </section>`;
+}
+
+/* ---------- Thai store prices (collection "prices", refreshed daily from PlayStation Store TH) ---------- */
+const PS_URL = id => "https://store.playstation.com/th-th/product/"+encodeURIComponent(id);
+const EDITION_RE = /\b(standard|digital|deluxe|ultimate|gold|premium|complete|definitive|launch|cross gen|cross-gen) edition\b|\b(ps5|ps4)\b|\bversion\b/g;
+const priceKey = t => norm(String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")).replace(EDITION_RE," ").replace(/[^a-z0-9ก-๙]+/g," ").replace(/\s+/g," ").trim();
+function buildPrices(rows){
+  const map=new Map(), sales=[]; let meta=null;
+  rows.sort((a,b)=>a.id.localeCompare(b.id,undefined,{numeric:true})).forEach(r=>{
+    if(r.id==="meta") meta=r.data;
+    else if(/^ps-\d+$/.test(r.id)) (r.data.items||[]).forEach(it=>{ const k=priceKey(it.t); if(k && !map.has(k)) map.set(k,it); });
+    else if(/^sale-\d+$/.test(r.id)) sales.push(...(r.data.items||[]));
+  });
+  const t=today(); S.ps={ map, sales:sales.filter(x=>!x.e||x.e>=t), meta };
+}
+/* Store price for a game: only PS5 for now (Nintendo has no Thai eShop) */
+function storePrice(title, plats){
+  if(plats && plats.length && !plats.includes("PS5")) return null;
+  const it=S.ps.map.get(priceKey(title)); if(!it) return null;
+  const on=it.s!=null && (!it.e || it.e>=today());
+  return { ...it, now: on?it.s:it.b, on };
+}
+const sheetPlats = d => gamePlats(d);
+const daysLeft = e => e ? daysBetween(today(), e) : null;
+function saleEndText(e){ const d=daysLeft(e); if(d==null) return ""; return d<=0?"ลดถึงวันนี้":d===1?"ลดถึงพรุ่งนี้":`ลดถึง ${fmtDate(e,{day:"numeric",month:"short"})} (อีก ${d} วัน)`; }
+function pricePill(title, plats){
+  const sp=storePrice(title, plats); if(!sp) return "";
+  return sp.on ? `<span class="pill sale" title="PS Store ไทย ลด ${sp.p}%${sp.x?" (เฉพาะสมาชิก PS Plus)":""}">-${sp.p}% ${baht(sp.now)}</span>` : `<span class="pill soft mono" title="ราคา PS Store ไทย">${baht(sp.b)}</span>`;
+}
+/* Detail sheet / form block: base, sale, %, until when */
+function priceBlock(title, plats, opts={}){
+  const sp=storePrice(title, plats);
+  if(!sp){
+    if(plats && plats.length && !plats.includes("PS5")) return opts.form?"":`<dt>ราคา Store ไทย</dt><dd class="sub">Nintendo ไม่มี eShop ไทย</dd>`;
+    return opts.form?"":`<dt>ราคา PS Store</dt><dd class="sub">${S.ps.map.size?"ไม่พบในร้านไทย":"—"}</dd>`;
+  }
+  const main = sp.on ? `<s class="sub">${baht(sp.b)}</s> <b>${baht(sp.s)}</b> <span class="pill sale">-${sp.p}%</span>` : `<b>${baht(sp.b)}</b>`;
+  const extra = sp.on ? [saleEndText(sp.e), sp.x?"เฉพาะสมาชิก PS Plus":""].filter(Boolean).join(" · ") : "";
+  if(opts.form) return `<div class="hint pricehint">PS Store ไทย: <span class="mono">${main}</span>${extra?` · ${extra}`:""} <button type="button" class="btn small ghost" data-useprice="${opts.form}" data-v="${sp.now}">ใช้ราคานี้</button></div>`;
+  return `<dt>ราคา PS Store</dt><dd class="mono">${main}${extra?`<div class="sub" style="font-family:var(--f-body)">${extra}</div>`:""}<div><a class="sub" style="font-family:var(--f-body)" href="${PS_URL(sp.id)}" target="_blank" rel="noopener">เปิดใน PS Store</a></div></dd>`;
+}
+
+/* ---------- Sales: PS5 games on sale in the Thai PlayStation Store ---------- */
+function viewSales(){
+  const F=S.sale; const t=today();
+  const head=`${planTabs("sales")}
+    ${chipRow("salePlat",[["PS5","PS5"],["NS","Nintendo Switch"]],F.plat)}`;
+  if(F.plat==="NS") return `<section class="view">${head}<div class="empty"><b>ยังไม่มีราคา Nintendo eShop ไทย</b><span>Nintendo ไม่ได้เปิด eShop สำหรับประเทศไทย ราคาที่ขายในไทยมาจาก eShop ต่างประเทศ (เช่น ฮ่องกง ญี่ปุ่น อเมริกา) หรือแผ่น/ตลับตามร้าน ตอนนี้จึงแสดงเฉพาะ PS Store ไทย</span></div></section>`;
+  const meta=S.ps.meta;
+  if(!S.ps.sales.length) return `<section class="view">${head}<div class="empty"><b>${meta?"ตอนนี้ยังไม่มีเกมลดราคา":"ยังไม่มีข้อมูลราคา"}</b><span>ราคาจาก PS Store ไทยอัปเดตเองทุกวันเวลา 12:00 น.</span></div></section>`;
+  const qn=norm(F.q); const wishN=new Set(wishlist().map(g=>priceKey(g.title)));
+  let list=S.ps.sales.filter(x=>(!qn||norm(x.t).includes(qn)) && (!F.wish||wishN.has(priceKey(x.t))));
+  const by={ pct:(a,b)=>b.p-a.p||a.s-b.s, end:(a,b)=>(a.e||"9999").localeCompare(b.e||"9999")||b.p-a.p, low:(a,b)=>a.s-b.s, new:(a,b)=>(b.st||"").localeCompare(a.st||"")||b.p-a.p }[F.sort];
+  list=[...list].sort(by);
+  const shown=list.slice(0,F.n);
+  const row=x=>{
+    const mine=findOwnedMatch(x.t,["PS5"]); const has=mine.find(g=>g.status!=="wishlist"); const wish=wishN.has(priceKey(x.t));
+    const cov=x.c?"ps:"+x.c:(S.coverMap&&S.coverMap.get(norm(x.t)))||"";
+    const d=daysLeft(x.e);
+    return `<a class="row click salerow" href="${PS_URL(x.id)}" target="_blank" rel="noopener">${thumbHTML(x.t,"PS5",cov,"rthumb")}
+      <div class="grow"><div class="t">${esc(x.t)}</div>
+        <div class="s lmeta"><span class="pill sale">-${x.p}%</span><s>${baht(x.b)}</s> <b class="mono" style="color:var(--ink)">${baht(x.s)}</b>${x.x?`<span class="pill soft">PS Plus</span>`:""}${has?`<span class="pill ok">มีแล้ว</span>`:""}${wish?`<span class="pill soft">♥ Wishlist</span>`:""}</div>
+        <div class="s">${x.e?`<span class="${d!=null&&d<=2?"soon":""}">${fmtDate(x.st,{day:"numeric",month:"short"})||"?"} – ${fmtDate(x.e,{day:"numeric",month:"short",year:"numeric"})}${d!=null?` · ${d<=0?"วันสุดท้าย":`เหลือ ${d} วัน`}`:""}</span>`:`<span>เริ่ม ${fmtDate(x.st,{day:"numeric",month:"short"})} · ยังไม่ทราบวันสิ้นสุด</span>`}</div></div></a>`;
+  };
+  return `<section class="view">${head}
+    <div class="tools"><label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="saleQ" type="search" placeholder="ค้นหาเกมที่ลดราคา" value="${esc(F.q)}" autocomplete="off"></label></div>
+    <div class="seg" role="group" style="width:100%">
+      <button type="button" data-salesort="pct" aria-pressed="${F.sort==="pct"}">ลดมากสุด</button>
+      <button type="button" data-salesort="end" aria-pressed="${F.sort==="end"}">ใกล้หมด</button>
+      <button type="button" data-salesort="low" aria-pressed="${F.sort==="low"}">ถูกสุด</button>
+      <button type="button" data-salesort="new" aria-pressed="${F.sort==="new"}">ลดใหม่</button>
+    </div>
+    <div class="statline"><span><b>${list.length}</b> เกม PS5 ลดราคาใน PS Store ไทย</span><button type="button" class="chip" data-act="saleWish" aria-pressed="${F.wish}">♥ เฉพาะใน Wishlist</button></div>
+    ${shown.length?`<div class="list">${shown.map(row).join("")}</div>`+(list.length>shown.length?`<button class="btn" style="width:100%;margin-top:12px" data-act="saleMore">แสดงเพิ่ม (${shown.length}/${list.length})</button>`:""):`<div class="empty"><b>ไม่พบเกมที่ตรงกับตัวกรอง</b></div>`}
+    <p class="src">ราคาจาก PlayStation Store ไทย (บาท) · วันเริ่มคือวันที่ระบบเห็นโปรครั้งแรก · อัปเดตทุกวัน 12:00 น.${meta?` · ล่าสุด ${fmtDate(meta.updatedAt)}`:""} · แตะเกมเพื่อเปิดใน PS Store</p>
   </section>`;
 }
 
@@ -859,7 +940,7 @@ function viewTop10(){
     const attr=`${esc(r.t)}|${esc(r.d||"")}|${T.plat}`;
     const sc=r.score?`<span class="pill ${r.score>=85?"ok":"soft"}">${r.score}</span>`:"";
     return `<div class="row click" data-reldetail="${attr}"><div class="day${i>=99?" d3":""}">${i+1}</div>${thumbHTML(r.t,T.plat,cov,"rthumb")}
-      <div class="grow"><div class="t">${esc(r.t)}</div><div class="s lmeta">${T.kind==="rated"?sc:""}${r.d?`<span>${fmtDate(r.d)}</span>`:""}${r.pub?`<span>· ${esc(r.pub)}</span>`:""}${has?`<span class="pill ok">มีแล้ว</span>`:""}</div></div>
+      <div class="grow"><div class="t">${esc(r.t)}</div><div class="s lmeta">${T.kind==="rated"?sc:""}${r.d?`<span>${fmtDate(r.d)}</span>`:""}${r.pub?`<span>· ${esc(r.pub)}</span>`:""}${has?`<span class="pill ok">มีแล้ว</span>`:pricePill(r.t,[T.plat])}</div></div>
       <div class="rowbtns"><button class="btn small heart" data-wish="${attr}" aria-pressed="${!!wish}" aria-label="Wishlist">${wish?"♥":"♡"}</button></div></div>`;
   };
   return `<section class="view">${head}
@@ -879,7 +960,7 @@ function viewWishlist(){
     ${list.length?`<div class="list">${list.map(g=>{
       const days = g.releaseDate ? daysBetween(t,g.releaseDate) : null;
       const when = days==null ? "ยังไม่ระบุวันวางขาย" : days>0 ? `อีก ${days} วัน · ${fmtDate(g.releaseDate)}` : days===0 ? "วางขายวันนี้" : `วางขายแล้ว ${fmtDate(g.releaseDate)}`;
-      return `<div class="row click" data-detail="${esc(g.id)}">${thumbHTML(g.title,g.platform,coverOf(g.title,g),"rthumb")}<div class="grow"><div class="t">${esc(g.title)}</div><div class="s" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${gamePlats(g).map(platTag).join("")}<span>${when}</span>${rentTag(g.title)}</div></div>
+      return `<div class="row click" data-detail="${esc(g.id)}">${thumbHTML(g.title,g.platform,coverOf(g.title,g),"rthumb")}<div class="grow"><div class="t">${esc(g.title)}</div><div class="s" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${gamePlats(g).map(platTag).join("")}<span>${when}</span>${pricePill(g.title,gamePlats(g))}${rentTag(g.title)}</div></div>
         <div class="rowbtns"><button class="btn small" data-detail="${esc(g.id)}">ดูข้อมูล</button>${rentBtn(g.title,"rentwish",g.id,"btn small")}<button class="btn small primary" data-buywish="${esc(g.id)}">ซื้อ</button></div></div>`;}).join("")}</div>`
     :`<div class="empty"><b>Wishlist ว่างอยู่</b><span>กด ♡ ที่เกมในกำหนดการ หรือเพิ่มเกมแล้วเลือกสถานะ “Wishlist”</span><a class="btn" href="#releases">เปิดกำหนดการ</a></div>`}
   </section>`;
@@ -1393,7 +1474,7 @@ function renderRentSheet(){
         <div class="field"><label for="rf-due">วันคืน (กำหนด)</label><input id="rf-due" type="date" value="${esc(d.due)}">
           <div class="rentq">${[3,7,14,30].map(n=>`<button type="button" class="btn small ghost" data-rentdue="${n}">${n} วัน</button>`).join("")}</div></div>
       </div>
-      <div class="field"><label for="rf-fee">ค่าเช่า (บาท)</label><input id="rf-fee" type="number" inputmode="decimal" min="0" step="any" value="${esc(d.fee)}" placeholder="0"></div>
+      <div class="field"><label for="rf-fee">ค่าเช่า (บาท)</label><input id="rf-fee" type="number" inputmode="decimal" min="0" step="any" value="${esc(d.fee)}" placeholder="0"><div id="rentPriceHint">${priceBlock(d.title,[d.platform],{form:"rf-fee"})}</div></div>
       <div class="field"><span class="lab">คืนแล้วหรือยัง</span><div class="seg" role="group"><button type="button" data-rentseg="returned" data-v="0" aria-pressed="${!d.returned}">ยังไม่คืน</button><button type="button" data-rentseg="returned" data-v="1" aria-pressed="${!!d.returned}">คืนแล้ว</button></div></div>
       ${d.returned?`<div class="field"><label for="rf-back">วันที่คืนจริง</label><input id="rf-back" type="date" value="${esc(d.returnedOn)}"></div>`:""}
       <div id="rentCalc">${rentCalcHTML(d)}</div>
@@ -1543,6 +1624,7 @@ function renderDetail(){
             <dt>ค่ายเกม</dt><dd>${esc(pub)||"—"}</dd>
             ${(()=>{ const gn=splitGenres(ci.g||(g?gameGenre(g):info.genre)||(x.rent&&x.rent.genre)||"").join(", "); return gn?`<dt>แนวเกม</dt><dd>${esc(gn)}</dd>`:""; })()}
             <dt>วางจำหน่าย</dt><dd>${fmtDate(x.release)||"—"}</dd>
+            ${priceBlock(x.title, x.plats)}
             ${rt?`<dt>เช่าเมื่อ</dt><dd>${fmtDate(rt.start)||"—"}</dd><dt>${rt.returned?"คืนเมื่อ":"กำหนดคืน"}</dt><dd>${fmtDate(rt.returned?rt.returnedOn:rt.due)||"—"}</dd><dt>ระยะเวลา</dt><dd>${rentDays(rt)||"—"} วัน</dd><dt>ค่าเช่า</dt><dd class="mono">${rt.fee!==""&&rt.fee!=null?baht(rt.fee):"—"}</dd>${rt.shop?`<dt>เช่าจาก</dt><dd>${esc(rt.shop)}</dd>`:""}`:""}
             ${g&&g.status!=="wishlist"?`<dt>ซื้อเมื่อ</dt><dd>${fmtDate(g.purchaseDate)||"—"}</dd><dt>ราคา</dt><dd class="mono">${g.price!==""&&g.price!=null?baht(g.price):"—"}</dd><dt>รูปแบบ</dt><dd>${fmtLabel(g)}${g.store?" · "+esc(g.store):""}</dd>`:""}
           </dl>
@@ -1638,6 +1720,9 @@ function openSheet(g, opts={}){
   const base = { id:uid(), title:"", platform:"PS5", status:"owned", developer:"", publisher:"", genre:"", releaseDate:"", purchaseDate:today(), format:"disc", store:"", price:"", notes:"", loans:[] };
   const draft = JSON.parse(JSON.stringify(Object.assign(base, g||{})));
   if(opts.markBought){ draft.status="owned"; if(!draft.purchaseDate) draft.purchaseDate=today(); }
+  if(draft.status!=="wishlist" && (draft.price===""||draft.price==null) && draft.title && (opts.markBought || !S.games.some(x=>x.id===draft.id))){
+    const sp=storePrice(draft.title, sheetPlats(draft)); if(sp) draft.price=sp.now;
+  }
   S.sheet={ draft, isNew:!S.games.some(x=>x.id===draft.id), markBought:!!opts.markBought, loanWho:"", loanOut:today(), aiState:"", options:opts.platformOptions||null };
   S.confirmDelete=false; S.detail=null;
   renderSheet();
@@ -1708,6 +1793,7 @@ function renderSheet(){
           <button type="button" class="btn small ghost" data-act="useRelease" style="align-self:flex-start">จำไม่ได้ ใช้วันวางจำหน่าย</button></div>
         <div class="field"><label for="f-price">ราคา (บาท)</label><input id="f-price" type="number" inputmode="decimal" min="0" step="any" value="${esc(d.price)}" placeholder="0"></div>
       </div>
+      <div id="priceHint">${priceBlock(d.title, sheetPlats(d), {form:"f-price"})}</div>
       <div class="field"><span class="lab">รูปแบบ</span><div id="fmtBox">${fmtSegHTML(d)}</div></div>
       <div class="field"><label for="f-store">ซื้อจากร้าน / Store</label><input id="f-store" list="dl-store" value="${esc(d.store)}" placeholder="เช่น PlayStation Store, Nintendo eShop, ร้านในห้าง">
         <datalist id="dl-store">${storeNames().map(s=>`<option value="${esc(s)}">`).join("")}</datalist></div>
@@ -1973,13 +2059,17 @@ document.addEventListener("click", async e=>{
   if(ds.sumview){ S.sumView=ds.sumview; render(); return; }
   if(ds.libview){ S.lib.view=ds.libview; try{ localStorage.setItem("gameslib.view",ds.libview); }catch{} render(); return; }
   if(ds.chip){
-    const map={libPlat:["lib","plat"],libLoan:["lib","loan"],relPlat:["rel","plat"],relYear:["rel","year"],topPlat:["top","plat"]}[ds.chip];
+    const map={libPlat:["lib","plat"],libLoan:["lib","loan"],relPlat:["rel","plat"],relYear:["rel","year"],topPlat:["top","plat"],salePlat:["sale","plat"]}[ds.chip];
     S[map[0]][map[1]]=ds.v; if(map[0]==="rel") S.rel.limit=0; if(map[0]==="top") S.top.n=25; render(); return;
   }
   if(ds.job){ fireJob(ds.job, ds.jobtitle||null, ds.jobplats?ds.jobplats.split(","):null); return; }
   if(ds.act==="cleanAsk"){ S.storage.confirm=true; render(); return; }
   if(ds.act==="cleanNo"){ S.storage.confirm=false; render(); return; }
   if(ds.act==="cleanGo"){ cleanStorage(); return; }
+  if(ds.salesort){ S.sale.sort=ds.salesort; S.sale.n=40; render(); return; }
+  if(ds.act==="saleMore"){ S.sale.n+=40; render(); return; }
+  if(ds.act==="saleWish"){ S.sale.wish=!S.sale.wish; S.sale.n=40; render(); return; }
+  if(ds.useprice){ const el=$("#"+ds.useprice); if(el){ el.value=ds.v; el.dispatchEvent(new Event("input",{bubbles:true})); } toast("ใส่ราคา "+baht(ds.v)+" แล้ว แก้ได้"); return; }
   if(ds.topkind){ S.top.kind=ds.topkind; S.top.n=25; render(); return; }
   if(ds.act==="topMore"){ S.top.n=(S.top.n||25)+25; render(); return; }
   if(ds.relwhen){ S.rel.when=ds.relwhen; S.rel.limit=0; render(); return; }
@@ -2028,10 +2118,11 @@ document.addEventListener("click", async e=>{
 });
 document.addEventListener("input", e=>{
   if(e.target.id==="libQ"){ S.lib.q=e.target.value; clearTimeout(S._qt); S._qt=setTimeout(render,180); }
-  if(e.target.id==="f-title" && S.sheet){ const dl=$("#dl-rel"); if(dl) dl.innerHTML=titleOptions(e.target.value,S.sheet.draft.platform); }
+  if(e.target.id==="f-title" && S.sheet){ const dl=$("#dl-rel"); if(dl) dl.innerHTML=titleOptions(e.target.value,S.sheet.draft.platform); const ph=$("#priceHint"); if(ph) ph.innerHTML=priceBlock(e.target.value, sheetPlats(S.sheet.draft), {form:"f-price"}); }
   if(e.target.id==="sf-start" && S.subSheet){ pullSubForm(); const c=$("#subCalc"); if(c) c.innerHTML=subCalcHTML(S.subSheet.draft); }
-  if(e.target.id==="rf-title" && S.rentSheet){ const dl=$("#dl-rent"); if(dl) dl.innerHTML=titleOptions(e.target.value,S.rentSheet.draft.platform); }
+  if(e.target.id==="rf-title" && S.rentSheet){ const dl=$("#dl-rent"); if(dl) dl.innerHTML=titleOptions(e.target.value,S.rentSheet.draft.platform); const ph=$("#rentPriceHint"); if(ph) ph.innerHTML=priceBlock(e.target.value,[S.rentSheet.draft.platform],{form:"rf-fee"}); }
   if(["rf-start","rf-due","rf-back"].includes(e.target.id) && S.rentSheet){ pullRentForm(); const c=$("#rentCalc"); if(c) c.innerHTML=rentCalcHTML(S.rentSheet.draft); }
+  if(e.target.id==="saleQ"){ S.sale.q=e.target.value; S.sale.n=40; clearTimeout(S._qt); S._qt=setTimeout(render,250); }
   if(e.target.id==="relQ"){ S.rel.q=e.target.value; S.rel.limit=0; clearTimeout(S._qt); S._qt=setTimeout(render,250); }
 });
 document.addEventListener("change", e=>{
@@ -2044,6 +2135,7 @@ document.addEventListener("change", e=>{
   if(e.target.id==="f-title" && S.sheet){ pullForm(); const d=S.sheet.draft; applyReleaseMatch(d);
     ["releaseDate","developer","publisher"].forEach(k=>{ const el=$("#f-"+k); if(el && !el.value && d[k]) el.value=d[k]; });
     const gb=$("#genreBox"); if(gb) gb.innerHTML=genreBoxHTML(d);
+    { const pr=$("#f-price"), sp=storePrice(d.title, sheetPlats(d)); if(pr && pr.value==="" && sp && d.status!=="wishlist"){ pr.value=sp.now; d.price=sp.now; } const hb=$("#priceHint"); if(hb) hb.innerHTML=priceBlock(d.title, sheetPlats(d), {form:"f-price"}); }
     const before=d.platform; const pb=$("#platBox"); const ph=platBoxHTML(); if(pb && pb.innerHTML!==ph) pb.innerHTML=ph;
     if(d.platform!==before){ d.releaseDate=""; applyReleaseMatch(d); const fr=$("#fmtBox"); if(fr) fr.innerHTML=fmtSegHTML(d);
       ["releaseDate","developer","publisher"].forEach(k=>{ const el=$("#f-"+k); if(el && d[k]) el.value=d[k]; }); if(gb) gb.innerHTML=genreBoxHTML(d); } }
