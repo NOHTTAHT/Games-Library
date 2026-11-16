@@ -845,6 +845,8 @@ function viewReleases(){
 }
 
 /* ---------- Thai store prices (collection "prices", refreshed daily from PlayStation Store TH) ---------- */
+const NC_URL = (title, plats) => "https://price.numcreator.com/"+(plats&&plats.length&&!plats.includes("PS5")?"switch":"playstation")+"/search/"+encodeURIComponent(String(title||"").replace(/[™®©]/g,"").trim());
+const ncLink = (title, plats, label) => `<a class="sub" style="font-family:var(--f-body)" href="${NC_URL(title,plats)}" target="_blank" rel="noopener">${label||"เทียบราคาใน numcreator"}</a>`;
 const PS_URL = id => "https://store.playstation.com/th-th/product/"+encodeURIComponent(id);
 const EDITION_RE = /\b(standard|digital|deluxe|ultimate|gold|premium|complete|definitive|launch|cross gen|cross-gen) edition\b|\b(ps5|ps4)\b|\bversion\b/g;
 const priceKey = t => norm(String(t||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")).replace(EDITION_RE," ").replace(/[^a-z0-9ก-๙]+/g," ").replace(/\s+/g," ").trim();
@@ -875,13 +877,13 @@ function pricePill(title, plats){
 function priceBlock(title, plats, opts={}){
   const sp=storePrice(title, plats);
   if(!sp){
-    if(plats && plats.length && !plats.includes("PS5")) return opts.form?"":`<dt>ราคา Store ไทย</dt><dd class="sub">Nintendo ไม่มี eShop ไทย</dd>`;
-    return opts.form?"":`<dt>ราคา PS Store</dt><dd class="sub">${S.ps.map.size?"ไม่พบในร้านไทย":"—"}</dd>`;
+    if(plats && plats.length && !plats.includes("PS5")) return opts.form?"":`<dt>ราคา eShop</dt><dd><span class="sub">ไม่มี eShop ไทย</span><div>${ncLink(title,plats,"ดูราคา eShop ทุกประเทศ (บาท)")}</div></dd>`;
+    return opts.form?"":`<dt>ราคา PS Store</dt><dd><span class="sub">${S.ps.map.size?"ไม่พบในร้านไทย":"—"}</span><div>${ncLink(title,plats,"ค้นใน numcreator")}</div></dd>`;
   }
   const main = sp.on ? `<s class="sub">${baht(sp.b)}</s> <b>${baht(sp.s)}</b> <span class="pill sale">-${sp.p}%</span>` : `<b>${baht(sp.b)}</b>`;
   const extra = sp.on ? [saleEndText(sp.e), sp.x?"เฉพาะสมาชิก PS Plus":""].filter(Boolean).join(" · ") : "";
   if(opts.form) return `<div class="hint pricehint">PS Store ไทย: <span class="mono">${main}</span>${extra?` · ${extra}`:""} <button type="button" class="btn small ghost" data-useprice="${opts.form}" data-v="${sp.now}">ใช้ราคานี้</button></div>`;
-  return `<dt>ราคา PS Store</dt><dd class="mono">${main}${extra?`<div class="sub" style="font-family:var(--f-body)">${extra}</div>`:""}<div><a class="sub" style="font-family:var(--f-body)" href="${PS_URL(sp.id)}" target="_blank" rel="noopener">เปิดใน PS Store</a></div></dd>`;
+  return `<dt>ราคา PS Store</dt><dd class="mono">${main}${extra?`<div class="sub" style="font-family:var(--f-body)">${extra}</div>`:""}<div><a class="sub" style="font-family:var(--f-body)" href="${PS_URL(sp.id)}" target="_blank" rel="noopener">เปิดใน PS Store</a> · ${ncLink(title,plats,"กราฟราคา")}</div></dd>`;
 }
 
 /* ---------- Sales: PS5 games on sale in the Thai PlayStation Store ---------- */
@@ -889,7 +891,7 @@ function viewSales(){
   const F=S.sale; const t=today();
   const head=`${planTabs("sales")}
     ${chipRow("salePlat",[["PS5","PS5"],["NS","Nintendo Switch"]],F.plat)}`;
-  if(F.plat==="NS") return `<section class="view">${head}<div class="empty"><b>ยังไม่มีราคา Nintendo eShop ไทย</b><span>Nintendo ไม่ได้เปิด eShop สำหรับประเทศไทย ราคาที่ขายในไทยมาจาก eShop ต่างประเทศ (เช่น ฮ่องกง ญี่ปุ่น อเมริกา) หรือแผ่น/ตลับตามร้าน ตอนนี้จึงแสดงเฉพาะ PS Store ไทย</span></div></section>`;
+  if(F.plat==="NS") return `<section class="view">${head}<div class="empty"><b>ยังไม่มีราคา Nintendo eShop ไทย</b><span>Nintendo ไม่ได้เปิด eShop สำหรับประเทศไทย ราคาที่ขายในไทยมาจาก eShop ต่างประเทศ (เช่น ฮ่องกง ญี่ปุ่น อเมริกา) หรือแผ่น/ตลับตามร้าน ตอนนี้จึงแสดงเฉพาะ PS Store ไทย</span><a class="btn" href="https://price.numcreator.com/switch/deal" target="_blank" rel="noopener">ดูเกม Switch ลดราคาใน numcreator</a></div></section>`;
   const meta=S.ps.meta;
   if(!S.ps.sales.length) return `<section class="view">${head}<div class="empty"><b>${meta?"ตอนนี้ยังไม่มีเกมลดราคา":"ยังไม่มีข้อมูลราคา"}</b><span>ราคาจาก PS Store ไทยอัปเดตเองทุกวันเวลา 12:00 น.</span></div></section>`;
   const qn=norm(F.q); const wishN=new Set(wishlist().map(g=>priceKey(g.title)));
