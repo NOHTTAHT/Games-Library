@@ -99,6 +99,7 @@
   const LOCAL = new Set(CFG.localCovers || []);
   function blobUrl(id){
     id = String(id||"");
+    if(id.startsWith("ps:")) return "https://image.api.playstation.com/vulcan/ap/rnd/" + id.slice(3).split("/").map(encodeURIComponent).join("/") + "?w=240";
     if(id.startsWith("ig:")) return "https://images.igdb.com/igdb/image/upload/t_cover_big/" + encodeURIComponent(id.slice(3)) + ".jpg";
     if(CFG.sheets && CFG.sheets.includes(id)) return "sheets/" + id + ".jpg";
     if(LOCAL.has(id)) return "covers/" + id + ".jpg";

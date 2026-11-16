@@ -4,7 +4,7 @@
 #   sale-0, sale-1 ... {items:[{t,b,s,p,e,st,id,c,x?,pl}]} PS5 games on sale now, with end date and first-seen date
 #   meta              {updatedAt, ps:{games,sales}, source}
 # Env: SUPABASE_URL, SUPABASE_SECRET_KEY.  Nintendo has no Thai eShop, so Switch prices are not fetched.
-import datetime, json, os, re, sys, time, urllib.parse, urllib.request
+import concurrent.futures, datetime, json, os, re, sys, time, urllib.parse, urllib.request
 HERE = os.path.dirname(os.path.abspath(__file__)); sys.path.insert(0, HERE)
 import supa
 
@@ -19,8 +19,8 @@ GAMES = {"FULL_GAME", "GAME_BUNDLE", "PREMIUM_EDITION"}
 BKK = datetime.timezone(datetime.timedelta(hours=7))
 TODAY = datetime.datetime.now(BKK).date().isoformat()
 DRY = os.environ.get("DRY_RUN") == "1"   # test run: no database, few end-date lookups, prints a sample
-STOP_AT = time.time() + (60 if DRY else 45 * 60)   # end-date lookups stop in time to save
-CHUNK = 1500                          # items per document (keeps each row small for live updates)
+STOP_AT = time.time() + (90 if DRY else 45 * 60)   # end-date lookups stop in time to save
+CHUNK = {"ps": 1500, "sale": 600}     # items per document (keeps each row under ~200 KB for live updates)
 IMG = "https://image.api.playstation.com/vulcan/ap/rnd/"
 
 def gql(op, var, hsh):
@@ -107,7 +107,8 @@ def end_date(pid, want):
     return best if d else None   # None = lookup failed, "" = no end date
 
 def chunks(prefix, items):
-    return {f"{prefix}-{i // CHUNK}": {"items": items[i:i + CHUNK]} for i in range(0, len(items), CHUNK)}
+    n = CHUNK[prefix]
+    return {f"{prefix}-{i // n}": {"items": items[i:i + n]} for i in range(0, len(items), n)}
 
 def main():
     report = []
@@ -131,7 +132,7 @@ def main():
     sales, looked, failed, live = [], 0, 0, set()
     src = [p for p in (deals or []) if "PS5" in (p.get("platforms") or []) and p.get("storeDisplayClassification") in GAMES]
     src += [p for p in allp if (p.get("price") or {}).get("discountText") and p.get("storeDisplayClassification") in GAMES]
-    done = set()
+    done, cur = set(), []
     for p in src:
         if p.get("id") in done: continue
         done.add(p.get("id"))
@@ -141,11 +142,19 @@ def main():
         st = seen.get(it["id"])
         if not st or st.get("k") != key:
             st = {"k": key, "st": TODAY, "e": None}
-        if st.get("e") is None and time.time() < STOP_AT:
-            e = end_date(it["id"], it["s"]); looked += 1
+        seen[it["id"]] = st; live.add(it["id"])
+        cur.append((p, it, st))
+    todo = [(it, st) for p, it, st in cur if st.get("e") is None]
+    def look(x):
+        it, st = x
+        if time.time() > STOP_AT: return x, None
+        return x, end_date(it["id"], it["s"])
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+        for (it, st), e in ex.map(look, todo):
+            if time.time() <= STOP_AT: looked += 1
             if e is None: failed += 1
             else: st["e"] = e
-        seen[it["id"]] = st; live.add(it["id"])
+    for p, it, st in cur:
         if st.get("e") and st["e"] < TODAY: continue   # already over
         it.update({"e": st.get("e") or "", "st": st["st"], "c": cover(p), "pl": [x for x in p.get("platforms") or [] if x in ("PS4", "PS5")]})
         sales.append(it)
