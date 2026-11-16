@@ -19,17 +19,24 @@ def strip(o):
     if isinstance(o, dict): return {k: strip(v) for k, v in o.items() if k not in ("mobilectas", "param", "__typename", "media")}
     if isinstance(o, list): return [strip(x) for x in o]
     return o
-for c in ["4cbf39e2-5749-4970-ba81-93a489e4570c", "3f772501-f6f8-49b7-abac-874a88ca4897", "d0446d4b-dc9a-4f1e-86ec-651f099c9b29", "803cee19-e5a1-4d59-a463-0b6b2701bf7c"]:
+for c in ["3f772501-f6f8-49b7-abac-874a88ca4897"]:
     s, h = gql("categoryGridRetrieve", {"id": c, "pageArgs": {"size": 200, "offset": 0}, "sortBy": None, "filterBy": [], "facetOptions": []}, CG)
     g = json.loads(h)["data"]["categoryGridRetrieve"]
     print("== cat", c, json.dumps(strip({k: v for k, v in g.items() if k not in ("products", "concepts")}))[:600])
     ps = g.get("products") or []
-    print("  first:", json.dumps(strip(ps[0]))[:1200])
+    print("  keys:", sorted(ps[0].keys()), json.dumps(ps[0].get("concept")))
     disc = [p for p in ps if (p.get("price") or {}).get("discountText")]
     print("  discounted in first 200:", len(disc))
     for p in disc[:3]: print("   ", p["name"], p.get("platforms"), json.dumps(p.get("price")))
 s, h = gql("metGetPricingDataByConceptId", {"conceptId": "10002456"}, "abcb311ea830e679fe2b697a27f755764535d825b24510ab1239a4ca3092bd09")
-print("== pricing", json.dumps(strip(json.loads(h)))[:3000])
+t = json.dumps(strip(json.loads(h)))
+for m in re.finditer(r"endTime|basePrice|discountText", t): print("   pricing ctx:", t[max(0,m.start()-300):m.start()+200])
+for op, hsh in [("productRetrieveForCtasWithPrice", "8532da7eda369efdad054ca8f885394a2d0c22d03c5259a422ae2bb3b98c5c99"),
+                ("productRetrieveForUpsellWithCtas", "fb0bfa0af4d8dc42b28fa5c077ed715543e7fb8a3deff8117a50b99864d246f1")]:
+    s, h = gql(op, {"productId": "EP3969-PPSA11386_00-007FIRSTLIGHT000"}, hsh)
+    print("==", op, s, json.dumps(strip(json.loads(h)))[:1500] if s == 200 else h[:300])
+s, h = get("https://store.playstation.com/en-th/product/EP3969-PPSA11386_00-007FIRSTLIGHT000")
+print("== product page", s, len(h), re.findall(r'"(endTime|startTime)":"?([^",}]*)', h)[:10])
 s, h = get("https://www.nintendo.com.hk/data/json/switch_software.json")
 lst = json.loads(h)
 nsu = [x for x in lst if re.match(r"7001\d{10}", x.get("thumb_img", ""))]
