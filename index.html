@@ -881,7 +881,7 @@ function priceBlock(title, plats, opts={}){
   const main = sp.on ? `<s class="sub">${baht(sp.b)}</s> <b>${baht(sp.s)}</b> <span class="pill sale">-${sp.p}%</span>` : `<b>${baht(sp.b)}</b>`;
   const extra = sp.on ? [saleEndText(sp.e), sp.x?"เฉพาะสมาชิก PS Plus":""].filter(Boolean).join(" · ") : "";
   if(opts.form) return `<div class="hint pricehint">PS Store ไทย: <span class="mono">${main}</span>${extra?` · ${extra}`:""} <button type="button" class="btn small ghost" data-useprice="${opts.form}" data-v="${sp.now}">ใช้ราคานี้</button></div>`;
-  return `<dt>ราคา PS Store</dt><dd class="mono">${main}${extra?`<div class="sub" style="font-family:var(--f-body)">${extra}</div>`:""}<div><a class="sub" style="font-family:var(--f-body)" href="${PS_URL(sp.id)}" target="_blank" rel="noopener">เปิดใน PS Store ↗</a></div></dd>`;
+  return `<dt>ราคา PS Store</dt><dd class="mono">${main}${extra?`<div class="sub" style="font-family:var(--f-body)">${extra}</div>`:""}<div><a class="sub" style="font-family:var(--f-body)" href="${PS_URL(sp.id)}" target="_blank" rel="noopener">เปิดใน PS Store</a></div></dd>`;
 }
 
 /* ---------- Sales: PS5 games on sale in the Thai PlayStation Store ---------- */
@@ -910,7 +910,7 @@ function viewSales(){
     <div class="tools"><label class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="saleQ" type="search" placeholder="ค้นหาเกมที่ลดราคา" value="${esc(F.q)}" autocomplete="off"></label></div>
     <div class="seg" role="group" style="width:100%">
       <button type="button" data-salesort="pct" aria-pressed="${F.sort==="pct"}">ลดมากสุด</button>
-      <button type="button" data-salesort="end" aria-pressed="${F.sort==="end"}">ใกล้หมดโปร</button>
+      <button type="button" data-salesort="end" aria-pressed="${F.sort==="end"}">ใกล้หมด</button>
       <button type="button" data-salesort="low" aria-pressed="${F.sort==="low"}">ถูกสุด</button>
       <button type="button" data-salesort="new" aria-pressed="${F.sort==="new"}">ลดใหม่</button>
     </div>
