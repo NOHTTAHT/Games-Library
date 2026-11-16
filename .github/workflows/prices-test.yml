@@ -1,0 +1,13 @@
+name: Prices dry run (temporary)
+on:
+  push:
+    branches: [claude/project-thread-71zwuy]
+    paths: [tools/prices.py, .github/workflows/prices-test.yml]
+jobs:
+  dry:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 tools/prices.py
+        env: { DRY_RUN: "1", SUPABASE_URL: "https://example.invalid", SUPABASE_SECRET_KEY: "none" }
